@@ -782,7 +782,11 @@
             .filter(Boolean)
         );
         const groups = groupByRoute(stopData[stationKey(stop)] || [])
-          .filter(group => !hiddenSet.has(String(group.route || "").toUpperCase()));
+          .filter(group => {
+            const routeUp = String(group.route || "").toUpperCase();
+            const destUp = String(group.dest || "").toUpperCase();
+            return !hiddenSet.has(routeUp) && !hiddenSet.has(destUp);
+          });
         return `
           <section class="station-section active">
             <div class="stop-title">
