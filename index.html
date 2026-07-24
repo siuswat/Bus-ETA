@@ -1068,22 +1068,21 @@
       }
     }
 
-    function refreshGoogleCalendar(force = false) {
+    function refreshGoogleCalendar() {
       const frame = els.gcalFrame;
-      if (!force && Date.now() - lastWidgetRefreshAt < WIDGET_REFRESH_MS) return;
       if (!frame || !frame.src || frame.src.includes("YOUR_CALENDAR_ID_HERE")) return;
       const url = new URL(frame.src);
       url.searchParams.set("_refresh", Date.now().toString());
       frame.src = url.toString();
     }
 
-    async function fetchEta(forceAllWidgets = false) {
-      const shouldRefreshWidgets = forceAllWidgets || Date.now() - lastWidgetRefreshAt >= WIDGET_REFRESH_MS;
-      if (shouldRefreshWidgets) {
-        lastWidgetRefreshAt = Date.now();
-        refreshGoogleCalendar(true);
-        fetchHongKongWeather();
-      }
+    function refreshSlowWidgets() {
+      lastWidgetRefreshAt = Date.now();
+      refreshGoogleCalendar();
+      fetchHongKongWeather();
+    }
+
+    async function fetchEta() {
       const stops = getStops();
 
       if (!stops.length) {
@@ -1247,7 +1246,8 @@
       if (els.forceRefreshBtn.classList.contains("spinning")) return;
       els.forceRefreshBtn.classList.add("spinning");
       clearTimeout(timer);
-      fetchEta(true);
+      refreshSlowWidgets();
+      fetchEta();
       setTimeout(() => els.forceRefreshBtn.classList.remove("spinning"), 500);
     });
 
@@ -1287,6 +1287,8 @@
     }, 1000);
 
     updateSystemTime();
+    refreshSlowWidgets();
+    setInterval(refreshSlowWidgets, WIDGET_REFRESH_MS);
     loadSettings();
   </script>
 </body>
