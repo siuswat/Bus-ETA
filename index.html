@@ -1027,38 +1027,41 @@
       return map[Number(icon)] || "🌤️";
     }
 
-    function hkoValue(reading, place) {
-      return (reading?.data || []).find(item => item.place === place)?.value ?? "--";
+    function hkoValue(list, place) {
+      return (list || []).find(item => item.place === place)?.value ?? "--";
     }
 
     async function fetchHongKongWeather() {
       try {
-        const base = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread";
-        const [enResponse, tcResponse] = await Promise.all([
-          fetch(`${base}&lang=en`, { cache: "no-store" }),
-          fetch(`${base}&lang=tc`, { cache: "no-store" })
+        const currentBase = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread";
+        const forecastBase = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=flw";
+        const [currentEnResponse, currentTcResponse, forecastEnResponse, forecastTcResponse] = await Promise.all([
+          fetch(`${currentBase}&lang=en`, { cache: "no-store" }),
+          fetch(`${currentBase}&lang=tc`, { cache: "no-store" }),
+          fetch(`${forecastBase}&lang=en`, { cache: "no-store" }),
+          fetch(`${forecastBase}&lang=tc`, { cache: "no-store" })
         ]);
-        if (!enResponse.ok || !tcResponse.ok) throw new Error("HKO API unavailable");
-        const [en, tc] = await Promise.all([enResponse.json(), tcResponse.json()]);
-        const temp = hkoValue(tc.temperature, "香港天文台");
-        const humidity = hkoValue(tc.humidity, "香港天文台");
-        const uvTc = tc.uvindex?.data?.[0];
-        const uvEn = en.uvindex?.data?.[0];
+        if (![currentEnResponse, currentTcResponse, forecastEnResponse, forecastTcResponse].every(response => response.ok)) throw new Error("HKO API unavailable");
+        const [en, tc, forecastEn, forecastTc] = await Promise.all([
+          currentEnResponse.json(), currentTcResponse.json(), forecastEnResponse.json(), forecastTcResponse.json()
+        ]);
+        const temperature = hkoValue(tc.temperature?.data, "香港天文台");
+        const humidity = hkoValue(tc.humidity?.data, "香港天文台");
         const icon = tc.icon?.[0] ?? en.icon?.[0];
         els.weatherContent.innerHTML = `
           <div class="weather-main">
             <div class="weather-icon" aria-hidden="true">${weatherIcon(icon)}</div>
             <div>
-              <div class="weather-temp">${safeText(temp)}°C</div>
+              <div class="weather-temp">${safeText(temperature)}°C</div>
               <div class="weather-range">相對濕度 ${safeText(humidity)}% · Relative humidity ${safeText(humidity)}%</div>
             </div>
           </div>
-          <div class="weather-desc">目前天氣 · 香港天文台 / Current conditions · Hong Kong Observatory</div>
-          ${uvTc && uvEn ? `<div class="weather-desc-en">紫外線指數 ${safeText(uvTc.value)}（${safeText(uvTc.desc)}） · UV index ${safeText(uvEn.value)} (${safeText(uvEn.desc)})</div>` : ""}`;
-        const update = tc.updateTime ? new Date(tc.updateTime) : new Date();
-        els.weatherUpdated.textContent = "HKO · " + new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", hour12: false }).format(update);
+          <div class="weather-desc">${safeText(forecastTc.forecastDesc || "暫未提供今日天氣描述。")}</div>
+          <div class="weather-desc-en" lang="en">${safeText(forecastEn.forecastDesc || "Today's weather description is not available.")}</div>`;
+        const observed = new Date(tc.temperature?.recordTime || tc.updateTime || Date.now());
+        els.weatherUpdated.textContent = "HKO · " + new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", hour12: false }).format(observed);
       } catch {
-        els.weatherContent.textContent = "暫時未能讀取天文台即時天氣資料 · Current weather data is temporarily unavailable.";
+        els.weatherContent.textContent = "暫時未能讀取天文台即時天氣及今日預測資料 · Current weather and today's forecast are temporarily unavailable.";
         els.weatherUpdated.textContent = "HKO";
       }
     }
