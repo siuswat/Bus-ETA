@@ -278,6 +278,51 @@
       border-color: rgba(220, 38, 38, .25);
     }
 
+    .weather-panel {
+      margin-bottom: 14px;
+      padding: 14px;
+      border-radius: 22px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .weather-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .weather-title { font-size: 16px; font-weight: 950; }
+    .weather-updated { color: var(--muted); font-size: 11px; font-weight: 750; }
+
+    .weather-main {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .weather-icon {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 31px;
+    }
+
+    .weather-temp { font-size: 27px; font-weight: 950; line-height: 1; }
+    .weather-range { margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 800; }
+    .weather-desc { margin-top: 12px; font-size: 13px; font-weight: 800; line-height: 1.45; }
+    .weather-desc-en { margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 700; line-height: 1.45; }
+    .weather-error { color: var(--muted); font-size: 13px; font-weight: 750; }
+
     .calendar-panel {
       margin-top: 0;
       padding: 14px;
@@ -576,6 +621,15 @@
         </div>
       </section>
 
+      <aside class="right-sidebar" aria-label="天氣及日曆">
+        <section class="weather-panel" id="weatherPanel" aria-live="polite">
+          <div class="weather-head">
+            <div class="weather-title">香港天氣 <span lang="en">Hong Kong Weather</span></div>
+            <div class="weather-updated" id="weatherUpdated">載入中…</div>
+          </div>
+          <div id="weatherContent" class="weather-error">正在讀取香港天文台資料…</div>
+        </section>
+
       <section class="calendar-panel">
       <div class="calendar-head">
         <div class="calendar-title">今日行程</div>
@@ -590,6 +644,7 @@
           loading="lazy"></iframe>
       </div>
       </section>
+      </aside>
     </div>
   </main>
 
@@ -650,6 +705,8 @@
       statusDot: document.getElementById("statusDot"),
       forceRefreshBtn: document.getElementById("forceRefreshBtn"),
       gcalFrame: document.getElementById("gcalFrame"),
+      weatherContent: document.getElementById("weatherContent"),
+      weatherUpdated: document.getElementById("weatherUpdated"),
       stationsWrap: document.getElementById("stationsWrap")
     };
 
@@ -960,6 +1017,47 @@
       }
     }
 
+    function weatherIcon(icon) {
+      const map = {
+        50: "☀️", 51: "☀️", 52: "☀️", 53: "☀️", 54: "☀️", 60: "🌤️", 61: "🌤️",
+        62: "☁️", 63: "☁️", 64: "☁️", 65: "☁️", 70: "🌧️", 71: "🌧️", 72: "🌧️",
+        73: "🌧️", 74: "🌧️", 75: "⛈️", 76: "⛈️", 77: "🌦️", 80: "🌦️", 81: "🌦️",
+        82: "🌦️", 83: "🌫️", 84: "🌫️", 90: "☀️", 91: "🌧️", 92: "🌧️", 93: "🌧️"
+      };
+      return map[Number(icon)] || "🌤️";
+    }
+
+    async function fetchHongKongWeather() {
+      try {
+        const base = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd";
+        const [enResponse, tcResponse] = await Promise.all([
+          fetch(`${base}&lang=en`, { cache: "no-store" }),
+          fetch(`${base}&lang=tc`, { cache: "no-store" })
+        ]);
+        if (!enResponse.ok || !tcResponse.ok) throw new Error("HKO API unavailable");
+        const [en, tc] = await Promise.all([enResponse.json(), tcResponse.json()]);
+        const enToday = (en.weatherForecast || [])[0];
+        const tcToday = (tc.weatherForecast || [])[0];
+        if (!enToday || !tcToday) throw new Error("No forecast returned");
+        const min = tcToday.forecastMintemp?.value ?? "--";
+        const max = tcToday.forecastMaxtemp?.value ?? "--";
+        els.weatherContent.innerHTML = `
+          <div class="weather-main">
+            <div class="weather-icon" aria-hidden="true">${weatherIcon(tcToday.ForecastIcon)}</div>
+            <div>
+              <div class="weather-temp">${safeText(min)}–${safeText(max)}°C</div>
+              <div class="weather-range">${safeText(tcToday.week)} · ${safeText(enToday.week)}</div>
+            </div>
+          </div>
+          <div class="weather-desc">${safeText(tcToday.forecastWeather)}</div>
+          <div class="weather-desc-en" lang="en">${safeText(enToday.forecastWeather)}</div>`;
+        els.weatherUpdated.textContent = "HKO · " + new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
+      } catch {
+        els.weatherContent.textContent = "暫時未能讀取天文台天氣資料 · Weather data is temporarily unavailable.";
+        els.weatherUpdated.textContent = "HKO";
+      }
+    }
+
     function refreshGoogleCalendar() {
       const frame = els.gcalFrame;
       if (!frame || !frame.src || frame.src.includes("YOUR_CALENDAR_ID_HERE")) return;
@@ -970,6 +1068,7 @@
 
     async function fetchEta() {
       refreshGoogleCalendar();
+      fetchHongKongWeather();
       const stops = getStops();
 
       if (!stops.length) {
