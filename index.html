@@ -626,6 +626,7 @@
       systemDate: document.getElementById("systemDate"),
       statusDot: document.getElementById("statusDot"),
       forceRefreshBtn: document.getElementById("forceRefreshBtn"),
+      gcalFrame: document.getElementById("gcalFrame"),
       stationsWrap: document.getElementById("stationsWrap")
     };
 
@@ -936,7 +937,16 @@
       }
     }
 
+    function refreshGoogleCalendar() {
+      const frame = els.gcalFrame;
+      if (!frame || !frame.src || frame.src.includes("YOUR_CALENDAR_ID_HERE")) return;
+      const url = new URL(frame.src);
+      url.searchParams.set("_refresh", Date.now().toString());
+      frame.src = url.toString();
+    }
+
     async function fetchEta() {
+      refreshGoogleCalendar();
       const stops = getStops();
 
       if (!stops.length) {
