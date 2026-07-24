@@ -524,10 +524,18 @@
       .route-dot { width: calc(20% - 7px); }
     }
 
-    @media (max-width: 760px) {
+    /* Keep ETA and Calendar side-by-side on Android tablets in portrait or landscape. */
+    @media (max-width: 599px) {
       .dashboard-grid { grid-template-columns: 1fr; }
       .calendar-panel { margin-top: 14px; }
       .gcal-frame-wrap iframe { height: 360px; }
+    }
+
+    @media (min-width: 600px) {
+      .dashboard-grid {
+        grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+      }
+      .gcal-frame-wrap iframe { height: 560px; }
     }
 
     @media (max-width: 390px) {
