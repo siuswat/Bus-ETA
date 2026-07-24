@@ -271,6 +271,51 @@
       border-color: rgba(220, 38, 38, .25);
     }
 
+    .calendar-panel {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 22px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .calendar-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 0 2px;
+    }
+
+    .calendar-title {
+      font-size: 16px;
+      font-weight: 950;
+      color: var(--text);
+    }
+
+    .calendar-subtitle {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .gcal-frame-wrap {
+      position: relative;
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--card-solid);
+    }
+
+    .gcal-frame-wrap iframe {
+      width: 100%;
+      height: 320px;
+      border: 0;
+      display: block;
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -506,6 +551,21 @@
       <div class="hint">
         請按左上角 ⚙ 選擇巴士公司並輸入巴士站 ID。<br>
         支援 KMB/LWB 及城巴 CTB，可自行新增多個車站。
+      </div>
+    </section>
+
+    <section class="calendar-panel">
+      <div class="calendar-head">
+        <div class="calendar-title">今日行程</div>
+        <div class="calendar-subtitle">Google 日曆</div>
+      </div>
+      <div class="gcal-frame-wrap">
+        <iframe
+          id="gcalFrame"
+          src="https://calendar.google.com/calendar/embed?src=family06923222005615842840%40group.calendar.google.com&ctz=Asia%2FHong_Kong&mode=AGENDA&showTitle=0&showNav=0&showDate=0&showPrint=0&showTabs=0&showCalendars=0&showTz=0"
+          frameborder="0"
+          scrolling="no"
+          loading="lazy"></iframe>
       </div>
     </section>
   </main>
