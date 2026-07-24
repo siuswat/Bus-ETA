@@ -56,7 +56,7 @@
 
     .topbar {
       display: grid;
-      grid-template-columns: 46px 1fr 46px;
+      grid-template-columns: 46px 1fr 46px 46px;
       align-items: center;
       gap: 8px;
       margin-bottom: 10px;
@@ -73,6 +73,28 @@
       font-size: 22px;
       cursor: pointer;
       backdrop-filter: blur(16px);
+    }
+
+    .refresh-btn {
+      width: 46px;
+      height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      font-size: 20px;
+      cursor: pointer;
+      backdrop-filter: blur(16px);
+      transition: transform .5s ease;
+    }
+
+    .refresh-btn.spinning {
+      transform: rotate(360deg);
+    }
+
+    .refresh-btn:active {
+      transform: scale(.9);
     }
 
     .clock-box {
@@ -453,9 +475,9 @@
     @media (max-width: 390px) {
       body { padding-left: 8px; padding-right: 8px; }
       .topbar {
-        grid-template-columns: 42px 1fr 42px;
+        grid-template-columns: 42px 1fr 42px 42px;
       }
-      .gear-btn, .status-dot {
+      .gear-btn, .status-dot, .refresh-btn {
         width: 42px;
         height: 42px;
       }
@@ -476,6 +498,7 @@
         <div class="system-time" id="systemTime">--:--:--</div>
         <div class="system-date" id="systemDate">系統時間</div>
       </div>
+      <button class="refresh-btn" id="forceRefreshBtn" type="button" aria-label="強制更新">⟳</button>
       <div class="status-dot" id="statusDot" title="狀態">○</div>
     </section>
 
@@ -542,6 +565,7 @@
       systemTime: document.getElementById("systemTime"),
       systemDate: document.getElementById("systemDate"),
       statusDot: document.getElementById("statusDot"),
+      forceRefreshBtn: document.getElementById("forceRefreshBtn"),
       stationsWrap: document.getElementById("stationsWrap")
     };
 
@@ -1011,6 +1035,14 @@
     els.openSettingsBtn.addEventListener("click", openSettings);
     els.closeSettingsBtn.addEventListener("click", closeSettings);
     els.cancelSettingsBtn.addEventListener("click", closeSettings);
+
+    els.forceRefreshBtn.addEventListener("click", () => {
+      if (els.forceRefreshBtn.classList.contains("spinning")) return;
+      els.forceRefreshBtn.classList.add("spinning");
+      clearTimeout(timer);
+      fetchEta();
+      setTimeout(() => els.forceRefreshBtn.classList.remove("spinning"), 500);
+    });
 
     els.addStationBtn.addEventListener("click", () => {
       updateStationSettingsFromForm();
