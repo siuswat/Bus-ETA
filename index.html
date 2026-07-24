@@ -49,9 +49,16 @@
 
     .app {
       width: 100%;
-      max-width: 720px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 10px 0 14px;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, .85fr);
+      gap: 14px;
+      align-items: start;
     }
 
     .topbar {
@@ -272,7 +279,7 @@
     }
 
     .calendar-panel {
-      margin-top: 14px;
+      margin-top: 0;
       padding: 14px;
       border-radius: 22px;
       background: var(--card);
@@ -311,7 +318,7 @@
 
     .gcal-frame-wrap iframe {
       width: 100%;
-      height: 320px;
+      height: 560px;
       border: 0;
       display: block;
     }
@@ -517,6 +524,12 @@
       .route-dot { width: calc(20% - 7px); }
     }
 
+    @media (max-width: 760px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .calendar-panel { margin-top: 14px; }
+      .gcal-frame-wrap iframe { height: 360px; }
+    }
+
     @media (max-width: 390px) {
       body { padding-left: 8px; padding-right: 8px; }
       .topbar {
@@ -547,14 +560,15 @@
       <div class="status-dot" id="statusDot" title="狀態">○</div>
     </section>
 
-    <section class="stations-wrap" id="stationsWrap">
-      <div class="hint">
-        請按左上角 ⚙ 選擇巴士公司並輸入巴士站 ID。<br>
-        支援 KMB/LWB 及城巴 CTB，可自行新增多個車站。
-      </div>
-    </section>
+    <div class="dashboard-grid">
+      <section class="stations-wrap" id="stationsWrap">
+        <div class="hint">
+          請按左上角 ⚙ 選擇巴士公司並輸入巴士站 ID。<br>
+          支援 KMB/LWB 及城巴 CTB，可自行新增多個車站。
+        </div>
+      </section>
 
-    <section class="calendar-panel">
+      <section class="calendar-panel">
       <div class="calendar-head">
         <div class="calendar-title">今日行程</div>
         <div class="calendar-subtitle">Google 日曆</div>
@@ -567,7 +581,8 @@
           scrolling="no"
           loading="lazy"></iframe>
       </div>
-    </section>
+      </section>
+    </div>
   </main>
 
   <section class="modal-backdrop" id="settingsBackdrop" aria-hidden="true">
