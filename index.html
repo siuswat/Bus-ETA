@@ -810,7 +810,10 @@
 
       els.stationList.querySelectorAll("input, select").forEach(input => {
         input.addEventListener("input", updateStationSettingsFromForm);
-        input.addEventListener("change", updateStationSettingsFromForm);
+        input.addEventListener("change", () => {
+          updateStationSettingsFromForm();
+          if (input.classList.contains("company-input")) renderStationSettings();
+        });
       });
 
       els.stationList.querySelectorAll(".remove-station-btn").forEach(button => {
@@ -832,7 +835,8 @@
           company: normalizeCompany(station.company),
           id: normalizeStopId(station.id),
           name: station.name.trim() || `車站 ${index + 1}`,
-          hiddenRoutes: String(station.hiddenRoutes || "").trim()
+          hiddenRoutes: String(station.hiddenRoutes || "").trim(),
+          routeCode: String(station.routeCode || "").trim()
         }))
         .filter(station => station.id);
     }
@@ -1194,9 +1198,10 @@
             company: normalizeCompany(station.company),
             id: normalizeStopId(station.id),
             name: String(station.name || "").trim(),
-            hiddenRoutes: String(station.hiddenRoutes || "").trim()
+            hiddenRoutes: String(station.hiddenRoutes || "").trim(),
+            routeCode: String(station.routeCode || "").trim()
           }))
-          .filter((station, index, list) => station.id || station.name || station.hiddenRoutes || list.length === 1),
+          .filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || list.length === 1),
         refreshSeconds: els.refreshSeconds.value,
         theme: els.themeSelect.value
       };
@@ -1211,7 +1216,8 @@
           company: normalizeCompany(params.get("co") || params.get("co1") || "KMB"),
           id: normalizeStopId(firstStop),
           name: params.get("name") || params.get("name1") || "",
-          hiddenRoutes: params.get("hide") || params.get("hide1") || ""
+          hiddenRoutes: params.get("hide") || params.get("hide1") || "",
+          routeCode: params.get("route") || params.get("route1") || ""
         });
       }
 
@@ -1222,7 +1228,8 @@
           company: normalizeCompany(params.get(`co${i}`) || "KMB"),
           id: normalizeStopId(stopId),
           name: params.get(`name${i}`) || "",
-          hiddenRoutes: params.get(`hide${i}`) || ""
+          hiddenRoutes: params.get(`hide${i}`) || "",
+          routeCode: params.get(`route${i}`) || ""
         });
       }
 
@@ -1255,7 +1262,8 @@
           company: normalizeCompany(station.company),
           id: normalizeStopId(station.id),
           name: String(station.name || "").trim(),
-          hiddenRoutes: String(station.hiddenRoutes || "").trim()
+          hiddenRoutes: String(station.hiddenRoutes || "").trim(),
+          routeCode: String(station.routeCode || "").trim()
         }));
       } else if (saved.stopId1 || saved.stopId2) {
         stationSettings = [
