@@ -617,7 +617,7 @@
       <section class="stations-wrap" id="stationsWrap">
         <div class="hint">
           請按左上角 ⚙ 選擇巴士公司並輸入巴士站 ID。<br>
-          支援 KMB/LWB 及城巴 CTB，可自行新增多個車站。
+          支援 KMB/LWB、城巴 CTB 及綠色小巴 GMB，可自行新增多個車站。
         </div>
       </section>
 
@@ -676,7 +676,7 @@
         </div>
       </div>
 
-      <div class="settings-note">系統會自動列出每個車站的所有巴士路線。可加入多個車站；KMB/LWB 使用 KMB API；城巴 CTB 使用 DATA.GOV.HK 指定車站 ETA API。<br><strong>綠色小巴 GMB 加入方法：</strong>先把「巴士公司」選為 GMB，再於「巴士站 ID」輸入「路線ID-方向序號-站序」（例如：2001227-2-1），於「顯示名稱」輸入站名，並在「小巴路線編號（顯示用）」輸入 1、16 或 16A 等路線號，最後按「儲存並更新」。<br>唔知道 Stop ID？可到 <a href="https://hkbushub.netlify.app" target="_blank" rel="noopener noreferrer">hkbushub.netlify.app</a> 查詢巴士站 ID。</div>
+      <div class="settings-note">系統會自動列出每個車站的所有巴士路線。可加入多個車站；KMB/LWB 使用 KMB API；城巴 CTB 使用 DATA.GOV.HK 指定車站 ETA API。<br><strong>綠色小巴 GMB 詳細加入方法：</strong><br>1. 先把「巴士公司」選為 GMB。<br>2. 「巴士站 ID」必須輸入三段格式：<strong>路線ID-方向序號-站序</strong>，例如：2001227-2-1。<br>3. 「顯示名稱」可輸入你想顯示的站名，例如：旺角站、小西灣、觀塘碼頭。<br>4. 「小巴路線編號（顯示用）」請輸入乘客平時見到的路線號，例如：1、16、16A、69A；這個欄位只影響畫面顯示，不會用作 API 查詢。<br>5. 按「儲存並更新」後，畫面會以你輸入的路線號顯示 ETA。<br>6. 若顯示不到 ETA，請先檢查三段 ID 是否正確，特別是方向序號和站序。<br><strong>如何查 GMB 三段 ID：</strong><br>A. 先試地區路線清單：<a href="https://data.etagmb.gov.hk/route/HKI" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/HKI</a>、<a href="https://data.etagmb.gov.hk/route/KLN" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/KLN</a>、<a href="https://data.etagmb.gov.hk/route/NT" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/NT</a><br>B. 確認地區後，再查指定路線，例如：<a href="https://data.etagmb.gov.hk/route/HKI/1" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/HKI/1</a><br>C. 由路線資料找出 route_id 後，再查方向及各站，例如：<a href="https://data.etagmb.gov.hk/route-stop/2001227/1" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route-stop/2001227/1</a> 或 <a href="https://data.etagmb.gov.hk/route-stop/2001227/2" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route-stop/2001227/2</a><br>D. 找到目標站的 stop_seq 後，把三個值合併成：路線ID-方向序號-站序。<br><strong>地區 region 常用值：</strong>HKI、KLN、NT。<br>唔知道 Stop ID？可到 <a href="https://hkbushub.netlify.app" target="_blank" rel="noopener noreferrer">hkbushub.netlify.app</a> 查詢巴士站 ID。</div>
 
           <div class="settings-actions">
         <button class="primary" id="saveSettingsBtn" type="button">儲存並更新</button>
@@ -764,7 +764,7 @@
           hiddenRoutes: String(row.querySelector(".hide-routes-input")?.value || "").trim(),
           routeCode: String(row.querySelector(".route-code-input")?.value || "").trim()
         };
-      }).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || list.length === 1);
+      }).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || normalizeCompany(station.company) !== "KMB" || list.length === 1);
 
       if (!stationSettings.length) stationSettings = [createEmptyStation()];
     }
