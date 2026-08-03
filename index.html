@@ -680,7 +680,10 @@
 
           <div class="settings-actions">
         <button class="primary" id="saveSettingsBtn" type="button">儲存並更新</button>
+        <button class="secondary" id="exportSettingsBtn" type="button">匯出設定</button>
+        <button class="secondary" id="importSettingsBtn" type="button">匯入設定</button>
         <button class="secondary" id="cancelSettingsBtn" type="button">取消</button>
+        <input id="importSettingsFile" type="file" accept="application/json,.json" hidden />
       </div>
 
       <div class="settings-credit">
@@ -696,6 +699,9 @@
       closeSettingsBtn: document.getElementById("closeSettingsBtn"),
       cancelSettingsBtn: document.getElementById("cancelSettingsBtn"),
       saveSettingsBtn: document.getElementById("saveSettingsBtn"),
+      exportSettingsBtn: document.getElementById("exportSettingsBtn"),
+      importSettingsBtn: document.getElementById("importSettingsBtn"),
+      importSettingsFile: document.getElementById("importSettingsFile"),
       addStationBtn: document.getElementById("addStationBtn"),
       stationList: document.getElementById("stationList"),
       refreshSeconds: document.getElementById("refreshSeconds"),
@@ -1208,6 +1214,72 @@
       localStorage.setItem("hkBusEtaSettings", JSON.stringify(data));
     }
 
+    function getSettingsData() {
+      updateStationSettingsFromForm();
+      return {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        stations: stationSettings.map(station => ({
+          company: normalizeCompany(station.company),
+          id: normalizeStopId(station.id),
+          name: String(station.name || "").trim(),
+          hiddenRoutes: String(station.hiddenRoutes || "").trim(),
+          routeCode: String(station.routeCode || "").trim()
+        })).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || normalizeCompany(station.company) !== "KMB" || list.length === 1),
+        refreshSeconds: els.refreshSeconds.value,
+        theme: els.themeSelect.value
+      };
+    }
+
+    function exportSettings() {
+      const blob = new Blob([JSON.stringify(getSettingsData(), null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "hk-bus-eta-settings.json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function importSettings(file) {
+      try {
+        const data = JSON.parse(await file.text());
+        if (!data || typeof data !== "object") throw new Error("設定檔格式不正確");
+        if (data.version != null && data.version !== 1) throw new Error("設定檔版本不支援");
+        if (!Array.isArray(data.stations)) throw new Error("檔案內沒有車站設定");
+
+        const normalizedStations = data.stations.map((station, index) => {
+          if (!station || typeof station !== "object") throw new Error(`第 ${index + 1} 個車站資料無效`);
+          const company = normalizeCompany(station.company);
+          const id = normalizeStopId(station.id || "");
+          const name = String(station.name || "").trim();
+          const hiddenRoutes = String(station.hiddenRoutes || "").trim();
+          const routeCode = String(station.routeCode || "").trim();
+          if (!["KMB", "CTB", "GMB"].includes(company)) throw new Error(`第 ${index + 1} 個車站的巴士公司無效`);
+          if (!id && !name && !hiddenRoutes && !routeCode && company === "KMB") throw new Error(`第 ${index + 1} 個車站沒有任何可用設定`);
+          return { company, id, name, hiddenRoutes, routeCode };
+        }).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || normalizeCompany(station.company) !== "KMB" || list.length === 1);
+
+        stationSettings = normalizedStations.length ? normalizedStations : [createEmptyStation()];
+        if (["15", "30", "60"].includes(String(data.refreshSeconds))) els.refreshSeconds.value = String(data.refreshSeconds);
+        if (["light", "dark"].includes(data.theme)) {
+          els.themeSelect.value = data.theme;
+          document.documentElement.setAttribute("data-theme", data.theme);
+        }
+        renderStationSettings();
+        saveSettings();
+        closeSettings();
+        await fetchEta();
+        alert("設定已匯入並已更新 ETA。");
+      } catch (error) {
+        alert(`無法匯入設定：${error.message}`);
+      } finally {
+        els.importSettingsFile.value = "";
+      }
+    }
+
     function getUrlStations(params) {
       const stations = [];
       const firstStop = params.get("stop") || params.get("stop1") || "";
@@ -1332,6 +1404,13 @@
 
     els.themeSelect.addEventListener("change", () => {
       document.documentElement.setAttribute("data-theme", els.themeSelect.value);
+    });
+
+    els.exportSettingsBtn.addEventListener("click", exportSettings);
+    els.importSettingsBtn.addEventListener("click", () => els.importSettingsFile.click());
+    els.importSettingsFile.addEventListener("change", event => {
+      const file = event.target.files?.[0];
+      if (file) importSettings(file);
     });
 
     els.saveSettingsBtn.addEventListener("click", () => {
