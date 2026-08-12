@@ -5,202 +5,119 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>香港巴士到站時間 ETA</title>
   <style>
-    :root {
-      --bg: #f5f7fb;
-      --card: rgba(255, 255, 255, .9);
-      --card-solid: #ffffff;
-      --text: #142033;
-      --muted: #65758b;
-      --line: rgba(20, 32, 51, .11);
-      --accent: #2563eb;
-      --accent-soft: rgba(37, 99, 235, .1);
-      --green: #16a34a;
-      --red: #dc2626;
-      --shadow: 0 18px 45px rgba(15, 23, 42, .09);
-    }
-    [data-theme="dark"] {
-      --bg: #08111f;
-      --card: rgba(17, 28, 47, .88);
-      --card-solid: #111c2f;
-      --text: #f3f7ff;
-      --muted: #97a6ba;
-      --line: rgba(255, 255, 255, .12);
-      --accent: #60a5fa;
-      --accent-soft: rgba(96, 165, 250, .14);
-      --green: #4ade80;
-      --red: #fb7185;
-      --shadow: 0 18px 45px rgba(0, 0, 0, .28);
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100vh;
-      background: radial-gradient(circle at 10% 0%, rgba(37, 99, 235, .12), transparent 34%), radial-gradient(circle at 90% 4%, rgba(22, 163, 74, .10), transparent 30%), var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Noto Sans TC, Microsoft JhengHei, Arial, sans-serif;
-      padding: env(safe-area-inset-top) 10px env(safe-area-inset-bottom);
-    }
-    .app { width: 100%; max-width: 1280px; margin: 0 auto; padding: 10px 0 14px; }
-    .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, .85fr); gap: 14px; align-items: start; }
-    .topbar { display: grid; grid-template-columns: 46px 1fr 46px 46px; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .gear-btn, .refresh-btn, .status-dot { width: 46px; height: 46px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); color: var(--text); box-shadow: var(--shadow); backdrop-filter: blur(16px); display: grid; place-items: center; }
-    .gear-btn, .refresh-btn { cursor: pointer; font-size: 22px; }
-    .refresh-btn { font-size: 20px; transition: transform .5s ease; }
-    .refresh-btn.spinning { transform: rotate(360deg); }
-    .refresh-btn:active { transform: scale(.9); }
-    .clock-box { min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 16px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(16px); }
-    .system-time { font-size: clamp(23px, 7vw, 34px); font-weight: 950; line-height: 1; letter-spacing: -.03em; }
-    .system-date { margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 800; }
-    .status-dot { color: var(--muted); font-size: 18px; }
-    .stations-wrap { display: grid; gap: 14px; }
-    .station-section { display: none; }
-    .station-section.active { display: block; }
-    .stop-title { margin-bottom: 10px; padding: 14px; border-radius: 22px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(16px); }
-    .stop-name { font-size: clamp(22px, 6vw, 32px); font-weight: 950; line-height: 1.15; letter-spacing: -.02em; text-align: center; }
-    .stop-meta { margin-top: 6px; color: var(--muted); font-size: 12px; text-align: center; overflow-wrap: anywhere; }
-    .list { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
-    .route-dot { width: calc(25% - 6px); min-height: 92px; border-radius: 22px; padding: 9px 7px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(16px); text-align: center; overflow: hidden; }
-    .route-no { color: var(--accent); font-size: clamp(18px, 5.2vw, 28px); font-weight: 950; line-height: 1; letter-spacing: -.02em; white-space: nowrap; }
-    .route-dest { margin-top: 4px; color: var(--muted); font-size: 10px; font-weight: 850; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .first-eta { margin-top: 8px; color: var(--green); font-size: clamp(20px, 6vw, 30px); font-weight: 950; line-height: 1; }
-    .first-eta.now { color: var(--red); }
-    .unit { margin-left: 2px; font-size: 12px; font-weight: 850; color: inherit; }
-    .next-times { margin-top: 6px; display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; color: var(--muted); font-size: 11px; font-weight: 800; line-height: 1.2; }
-    .next-pill { padding: 2px 5px; border-radius: 999px; background: var(--accent-soft); color: var(--muted); }
-    .hint, .error, .empty { width: 100%; padding: 18px; border-radius: 22px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); color: var(--muted); text-align: center; line-height: 1.6; backdrop-filter: blur(16px); }
-    .error { color: var(--red); border-color: rgba(220, 38, 38, .25); }
-    .weather-panel { margin-bottom: 14px; padding: 14px; border-radius: 22px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(16px); }
-    .weather-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-    .weather-title { font-size: 16px; font-weight: 950; }
-    .weather-updated { color: var(--muted); font-size: 11px; font-weight: 750; }
-    .weather-main { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; }
-    .weather-icon { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 16px; background: var(--accent-soft); color: var(--accent); font-size: 31px; }
-    .weather-temp { font-size: 27px; font-weight: 950; line-height: 1; }
-    .weather-range { margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 800; }
-    .weather-desc { margin-top: 12px; font-size: 13px; font-weight: 800; line-height: 1.45; }
-    .weather-desc-en { margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 700; line-height: 1.45; }
-    .weather-error { color: var(--muted); font-size: 13px; font-weight: 750; }
-    .calendar-panel { margin-top: 0; padding: 14px; border-radius: 22px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(16px); }
-    .calendar-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; padding: 0 2px; }
-    .calendar-title { font-size: 16px; font-weight: 950; color: var(--text); }
-    .calendar-subtitle { font-size: 11px; font-weight: 800; color: var(--muted); }
-    .gcal-frame-wrap { position: relative; width: 100%; border-radius: 16px; overflow: hidden; background: var(--card-solid); }
-    .icloud-calendar-list { min-height: 160px; max-height: 560px; overflow-y: auto; }
-    .icloud-calendar-status { padding: 18px 10px; color: var(--muted); font-size: 13px; font-weight: 750; text-align: center; line-height: 1.5; }
-    .icloud-event { display: grid; grid-template-columns: 68px 1fr; gap: 10px; padding: 12px 10px; border-bottom: 1px solid var(--line); }
-    .icloud-event:last-child { border-bottom: 0; }
-    .icloud-event-time { color: var(--accent); font-size: 12px; font-weight: 900; line-height: 1.35; white-space: pre-line; }
-    .icloud-event-title { color: var(--text); font-size: 14px; font-weight: 850; line-height: 1.4; overflow-wrap: anywhere; }
-    .icloud-event-meta { margin-top: 3px; color: var(--muted); font-size: 11px; font-weight: 700; }
-    .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: none; align-items: flex-end; background: rgba(2, 6, 23, .48); padding: 14px; }
-    .modal-backdrop.active { display: flex; }
-    .settings-modal { width: 100%; max-width: 720px; max-height: 88vh; margin: 0 auto; overflow-y: auto; border-radius: 28px; background: var(--card-solid); border: 1px solid var(--line); box-shadow: 0 24px 70px rgba(0,0,0,.28); padding: 16px; animation: slideUp .18s ease-out; }
-    @keyframes slideUp { from { transform: translateY(18px); opacity: .75; } to { transform: translateY(0); opacity: 1; } }
-    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-    .modal-title { font-size: 22px; font-weight: 950; letter-spacing: -.02em; }
-    .close-btn { width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--text); font-size: 22px; cursor: pointer; }
-    .station-box { padding: 12px; border-radius: 20px; background: var(--accent-soft); border: 1px solid var(--line); margin-bottom: 10px; }
-    .station-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
-    .station-label { color: var(--accent); font-size: 14px; font-weight: 950; }
-    .remove-station-btn { min-height: 34px; border: 1px solid var(--line); border-radius: 12px; padding: 0 10px; background: var(--card); color: var(--red); font-size: 13px; font-weight: 900; cursor: pointer; }
-    .add-station-btn { width: 100%; min-height: 48px; border: 1px dashed var(--accent); border-radius: 17px; background: var(--accent-soft); color: var(--accent); font-size: 16px; font-weight: 950; cursor: pointer; margin-bottom: 10px; }
-    .form-grid { display: grid; gap: 10px; }
-    label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 13px; font-weight: 800; }
-    input, select { width: 100%; min-height: 50px; border: 1px solid var(--line); border-radius: 16px; padding: 0 13px; background: var(--card); color: var(--text); font-size: 16px; font-weight: 750; outline: none; }
-    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-    .settings-note { margin-top: 10px; padding: 10px 12px; border-radius: 16px; background: var(--accent-soft); color: var(--muted); font-size: 13px; line-height: 1.5; font-weight: 700; }
-    .settings-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-    button.primary, button.secondary { min-height: 52px; border-radius: 17px; font-size: 16px; font-weight: 900; cursor: pointer; }
-    button.primary { border: 0; color: white; background: linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow: 0 14px 30px rgba(37, 99, 235, .23); }
-    button.secondary { border: 1px solid var(--line); color: var(--text); background: var(--card); }
-    button:active { transform: scale(.985); }
-    .settings-credit { margin-top: 12px; text-align: center; font-size: 9px; line-height: 1.2; }
-    .settings-credit a { color: var(--muted); text-decoration: none; opacity: .55; }
-    .settings-credit a:active { opacity: .85; }
-    @media (min-width: 640px) { .modal-backdrop { align-items: center; } .form-grid { grid-template-columns: 1.1fr .9fr; } .station-box .form-grid { grid-template-columns: .75fr 1fr 1fr; } .route-dot { width: calc(20% - 7px); } }
-    @media (max-width: 599px) { .dashboard-grid { grid-template-columns: 1fr; } .calendar-panel { margin-top: 14px; } .icloud-calendar-list { max-height: 360px; } }
-    @media (min-width: 600px) { .dashboard-grid { grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); } .icloud-calendar-list { max-height: 560px; } }
-    @media (max-width: 390px) { body { padding-left: 8px; padding-right: 8px; } .topbar { grid-template-columns: 42px 1fr 42px 42px; } .gear-btn, .status-dot, .refresh-btn { width: 42px; height: 42px; } .route-dot { width: calc(33.333% - 6px); min-height: 86px; border-radius: 19px; } .settings-actions { grid-template-columns: 1fr; } }
+    :root { --bg:#f5f7fb; --card:rgba(255,255,255,.9); --card-solid:#fff; --text:#142033; --muted:#65758b; --line:rgba(20,32,51,.11); --accent:#2563eb; --accent-soft:rgba(37,99,235,.1); --green:#16a34a; --red:#dc2626; --shadow:0 18px 45px rgba(15,23,42,.09); }
+    [data-theme="dark"] { --bg:#08111f; --card:rgba(17,28,47,.88); --card-solid:#111c2f; --text:#f3f7ff; --muted:#97a6ba; --line:rgba(255,255,255,.12); --accent:#60a5fa; --accent-soft:rgba(96,165,250,.14); --green:#4ade80; --red:#fb7185; --shadow:0 18px 45px rgba(0,0,0,.28); }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:radial-gradient(circle at 10% 0%,rgba(37,99,235,.12),transparent 34%),radial-gradient(circle at 90% 4%,rgba(22,163,74,.10),transparent 30%),var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Noto Sans TC,Microsoft JhengHei,Arial,sans-serif; padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom); }
+    .app { width:100%; max-width:1280px; margin:0 auto; padding:10px 0 14px; }
+    .dashboard-grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(320px,.85fr); gap:14px; align-items:start; }
+    .topbar { display:grid; grid-template-columns:46px 1fr 46px 46px; align-items:center; gap:8px; margin-bottom:10px; }
+    .gear-btn,.refresh-btn,.status-dot { width:46px; height:46px; border:1px solid var(--line); border-radius:16px; background:var(--card); color:var(--text); box-shadow:var(--shadow); backdrop-filter:blur(16px); display:grid; place-items:center; }
+    .gear-btn,.refresh-btn { cursor:pointer; font-size:22px; }
+    .refresh-btn { font-size:20px; transition:transform .5s ease; }
+    .refresh-btn.spinning { transform:rotate(360deg); }
+    .refresh-btn:active { transform:scale(.9); }
+    .clock-box { min-height:46px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:16px; background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow); backdrop-filter:blur(16px); }
+    .system-time { font-size:clamp(23px,7vw,34px); font-weight:950; line-height:1; letter-spacing:-.03em; }
+    .system-date { margin-top:4px; color:var(--muted); font-size:12px; font-weight:800; }
+    .status-dot { color:var(--muted); font-size:18px; }
+    .stations-wrap { display:grid; gap:14px; }
+    .station-section { display:none; } .station-section.active { display:block; }
+    .stop-title { margin-bottom:10px; padding:14px; border-radius:22px; background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow); backdrop-filter:blur(16px); }
+    .stop-name { font-size:clamp(22px,6vw,32px); font-weight:950; line-height:1.15; letter-spacing:-.02em; text-align:center; }
+    .stop-meta { margin-top:6px; color:var(--muted); font-size:12px; text-align:center; overflow-wrap:anywhere; }
+    .list { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
+    .route-dot { width:calc(25% - 6px); min-height:92px; border-radius:22px; padding:9px 7px; background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow); backdrop-filter:blur(16px); text-align:center; overflow:hidden; }
+    .route-no { color:var(--accent); font-size:clamp(18px,5.2vw,28px); font-weight:950; line-height:1; letter-spacing:-.02em; white-space:nowrap; }
+    .route-dest { margin-top:4px; color:var(--muted); font-size:10px; font-weight:850; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .first-eta { margin-top:8px; color:var(--green); font-size:clamp(20px,6vw,30px); font-weight:950; line-height:1; }
+    .first-eta.now { color:var(--red); }
+    .unit { margin-left:2px; font-size:12px; font-weight:850; color:inherit; }
+    .next-times { margin-top:6px; display:flex; justify-content:center; gap:4px; flex-wrap:wrap; color:var(--muted); font-size:11px; font-weight:800; line-height:1.2; }
+    .next-pill { padding:2px 5px; border-radius:999px; background:var(--accent-soft); color:var(--muted); }
+    .hint,.error,.empty { width:100%; padding:18px; border-radius:22px; background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow); color:var(--muted); text-align:center; line-height:1.6; backdrop-filter:blur(16px); }
+    .error { color:var(--red); border-color:rgba(220,38,38,.25); }
+    .weather-panel { margin-bottom:14px; padding:14px; border-radius:22px; background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow); backdrop-filter:blur(16px); }
+    .weather-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .weather-title { font-size:16px; font-weight:950; } .weather-updated { color:var(--muted); font-size:11px; font-weight:750; }
+    .weather-main { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:center; }
+    .weather-icon { width:52px; height:52px; display:grid; place-items:center; border-radius:16px; background:var(--accent-soft); color:var(--accent); font-size:31px; }
+    .weather-temp { font-size:27px; font-weight:950; line-height:1; } .weather-range { margin-top:4px; color:var(--muted); font-size:12px; font-weight:800; }
+    .weather-desc { margin-top:12px; font-size:13px; font-weight:800; line-height:1.45; } .weather-desc-en { margin-top:4px; color:var(--muted); font-size:12px; font-weight:700; line-height:1.45; }
+    .weather-error { color:var(--muted); font-size:13px; font-weight:750; }
+    .calendar-panel { margin-top:0; padding:14px; border-radius:22px; background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow); backdrop-filter:blur(16px); }
+    .calendar-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; padding:0 2px; }
+    .calendar-title { font-size:16px; font-weight:950; color:var(--text); } .calendar-subtitle { font-size:11px; font-weight:800; color:var(--muted); }
+    .gcal-frame-wrap { position:relative; width:100%; border-radius:16px; overflow:hidden; background:var(--card-solid); }
+    .icloud-calendar-list { min-height:160px; max-height:560px; overflow-y:auto; }
+    .icloud-calendar-status { padding:18px 10px; color:var(--muted); font-size:13px; font-weight:750; text-align:center; line-height:1.5; }
+    .icloud-event { display:grid; grid-template-columns:68px 1fr; gap:10px; padding:12px 10px; border-bottom:1px solid var(--line); }
+    .icloud-event:last-child { border-bottom:0; }
+    .icloud-event-time { color:var(--accent); font-size:12px; font-weight:900; line-height:1.35; white-space:pre-line; }
+    .icloud-event-title { color:var(--text); font-size:14px; font-weight:850; line-height:1.4; overflow-wrap:anywhere; }
+    .icloud-event-meta { margin-top:3px; color:var(--muted); font-size:11px; font-weight:700; }
+    .modal-backdrop { position:fixed; inset:0; z-index:50; display:none; align-items:flex-end; background:rgba(2,6,23,.48); padding:14px; }
+    .modal-backdrop.active { display:flex; }
+    .settings-modal { width:100%; max-width:720px; max-height:88vh; margin:0 auto; overflow-y:auto; border-radius:28px; background:var(--card-solid); border:1px solid var(--line); box-shadow:0 24px 70px rgba(0,0,0,.28); padding:16px; animation:slideUp .18s ease-out; }
+    @keyframes slideUp { from{transform:translateY(18px);opacity:.75;} to{transform:translateY(0);opacity:1;} }
+    .modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+    .modal-title { font-size:22px; font-weight:950; letter-spacing:-.02em; }
+    .close-btn { width:42px; height:42px; border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--text); font-size:22px; cursor:pointer; }
+    .station-box { padding:12px; border-radius:20px; background:var(--accent-soft); border:1px solid var(--line); margin-bottom:10px; }
+    .station-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:9px; }
+    .station-label { color:var(--accent); font-size:14px; font-weight:950; }
+    .remove-station-btn { min-height:34px; border:1px solid var(--line); border-radius:12px; padding:0 10px; background:var(--card); color:var(--red); font-size:13px; font-weight:900; cursor:pointer; }
+    .add-station-btn { width:100%; min-height:48px; border:1px dashed var(--accent); border-radius:17px; background:var(--accent-soft); color:var(--accent); font-size:16px; font-weight:950; cursor:pointer; margin-bottom:10px; }
+    .form-grid { display:grid; gap:10px; }
+    label { display:block; margin-bottom:7px; color:var(--muted); font-size:13px; font-weight:800; }
+    input,select { width:100%; min-height:50px; border:1px solid var(--line); border-radius:16px; padding:0 13px; background:var(--card); color:var(--text); font-size:16px; font-weight:750; outline:none; }
+    input:focus,select:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); }
+    .settings-note { margin-top:10px; padding:10px 12px; border-radius:16px; background:var(--accent-soft); color:var(--muted); font-size:13px; line-height:1.5; font-weight:700; }
+    .settings-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+    button.primary,button.secondary { min-height:52px; border-radius:17px; font-size:16px; font-weight:900; cursor:pointer; }
+    button.primary { border:0; color:#fff; background:linear-gradient(135deg,#2563eb,#1d4ed8); box-shadow:0 14px 30px rgba(37,99,235,.23); }
+    button.secondary { border:1px solid var(--line); color:var(--text); background:var(--card); }
+    button:active { transform:scale(.985); }
+    .settings-credit { margin-top:12px; text-align:center; font-size:9px; line-height:1.2; }
+    .settings-credit a { color:var(--muted); text-decoration:none; opacity:.55; } .settings-credit a:active { opacity:.85; }
+    @media (min-width:640px) { .modal-backdrop{align-items:center;} .form-grid{grid-template-columns:1.1fr .9fr;} .station-box .form-grid{grid-template-columns:.75fr 1fr 1fr;} .route-dot{width:calc(20% - 7px);} }
+    @media (max-width:599px) { .dashboard-grid{grid-template-columns:1fr;} .calendar-panel{margin-top:14px;} .icloud-calendar-list{max-height:360px;} }
+    @media (min-width:600px) { .dashboard-grid{grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);} .icloud-calendar-list{max-height:560px;} }
+    @media (max-width:390px) { body{padding-left:8px;padding-right:8px;} .topbar{grid-template-columns:42px 1fr 42px 42px;} .gear-btn,.status-dot,.refresh-btn{width:42px;height:42px;} .route-dot{width:calc(33.333% - 6px);min-height:86px;border-radius:19px;} .settings-actions{grid-template-columns:1fr;} }
   </style>
 </head>
 <body>
   <main class="app">
     <section class="topbar">
       <button class="gear-btn" id="openSettingsBtn" type="button" aria-label="設定">⚙</button>
-      <div class="clock-box">
-        <div class="system-time" id="systemTime">--:--:--</div>
-        <div class="system-date" id="systemDate"></div>
-      </div>
+      <div class="clock-box"><div class="system-time" id="systemTime">--:--:--</div><div class="system-date" id="systemDate"></div></div>
       <button class="refresh-btn" id="forceRefreshBtn" type="button" aria-label="重新整理">↻</button>
       <div class="status-dot" id="statusDot" title=""></div>
     </section>
     <div class="dashboard-grid">
-      <section class="stations-wrap" id="stationsWrap">
-        <div class="hint">請按左上角 ⚙ 選擇巴士公司並輸入巴士站 ID。<br>支援 KMB/LWB、城巴 CTB 及綠色小巴 GMB，可自行新增多個車站。</div>
-      </section>
+      <section class="stations-wrap" id="stationsWrap"><div class="hint">請按左上角 ⚙ 選擇巴士公司並輸入巴士站 ID。<br>支援 KMB/LWB、城巴 CTB 及綠色小巴 GMB，可自行新增多個車站。</div></section>
       <aside class="right-sidebar" aria-label="天氣及日曆">
         <section class="weather-panel" id="weatherPanel" aria-live="polite">
-          <div class="weather-head">
-            <div class="weather-title"><span lang="en">Hong Kong Weather</span></div>
-            <div class="weather-updated" id="weatherUpdated"></div>
-          </div>
+          <div class="weather-head"><div class="weather-title"><span lang="en">Hong Kong Weather</span></div><div class="weather-updated" id="weatherUpdated"></div></div>
           <div id="weatherContent" class="weather-error">正在讀取香港天文台資料…</div>
         </section>
         <section class="calendar-panel">
-          <div class="calendar-head">
-            <div class="calendar-title">Today's Schedule</div>
-            <div class="calendar-subtitle">Apple Calendar</div>
-          </div>
-          <div class="gcal-frame-wrap">
-            <div id="appleCalendarList" class="icloud-calendar-list">
-              <div class="icloud-calendar-status">Loading Apple Calendar…</div>
-            </div>
-          </div>
+          <div class="calendar-head"><div class="calendar-title">今日行程</div><div class="calendar-subtitle">Apple 日曆</div></div>
+          <div class="gcal-frame-wrap"><div id="appleCalendarList" class="icloud-calendar-list"><div class="icloud-calendar-status">正在讀取 Apple 日曆…</div></div></div>
         </section>
       </aside>
     </div>
   </main>
   <section class="modal-backdrop" id="settingsBackdrop" aria-hidden="true">
     <div class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-      <div class="modal-head">
-        <div class="modal-title" id="settingsTitle">設定</div>
-        <button class="close-btn" id="closeSettingsBtn" type="button" aria-label="關閉設定">×</button>
-      </div>
+      <div class="modal-head"><div class="modal-title" id="settingsTitle">設定</div><button class="close-btn" id="closeSettingsBtn" type="button" aria-label="關閉設定">×</button></div>
       <div id="stationList"></div>
       <button class="add-station-btn" id="addStationBtn" type="button">＋ 新增車站</button>
-      <div class="form-grid" style="margin-top: 10px;">
-        <div>
-          <label for="refreshSeconds">更新時間</label>
-          <select id="refreshSeconds">
-            <option value="15">每 15 秒</option>
-            <option value="30" selected>每 30 秒</option>
-            <option value="60">每 60 秒</option>
-          </select>
-        </div>
-        <div>
-          <label for="themeSelect">畫面模式</label>
-          <select id="themeSelect">
-            <option value="light">淺色模式</option>
-            <option value="dark">深色模式</option>
-          </select>
-        </div>
+      <div class="form-grid" style="margin-top:10px;">
+        <div><label for="refreshSeconds">更新時間</label><select id="refreshSeconds"><option value="15">每 15 秒</option><option value="30" selected>每 30 秒</option><option value="60">每 60 秒</option></select></div>
+        <div><label for="themeSelect">畫面模式</label><select id="themeSelect"><option value="light">淺色模式</option><option value="dark">深色模式</option></select></div>
       </div>
-      <div class="settings-note">
-        系統會自動列出每個車站的所有巴士路線。可加入多個車站；KMB/LWB 使用 KMB API；城巴 CTB 使用 DATA.GOV.HK 指定車站 ETA API。<br>
-        <strong>綠色小巴 GMB 詳細加入方法：</strong><br>
-        1. 先把「巴士公司」選為 GMB。<br>
-        2. 「巴士站 ID」必須輸入三段格式：<strong>路線ID-方向序號-站序</strong>，例如：2001227-2-1。<br>
-        3. 「顯示名稱」可輸入你想顯示的站名，例如：旺角站、小西灣、觀塘碼頭。<br>
-        4. 「小巴路線編號（顯示用）」請輸入乘客平時見到的路線號，例如：1、16、16A、69A；這個欄位只影響畫面顯示，不會用作 API 查詢。<br>
-        5. 按「儲存並更新」後，畫面會以你輸入的路線號顯示 ETA。<br>
-        6. 若顯示不到 ETA，請先檢查三段 ID 是否正確，特別是方向序號和站序。<br>
-        <strong>如何查 GMB 三段 ID：</strong><br>
-        A. 先試地區路線清單：<a href="https://data.etagmb.gov.hk/route/HKI" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/HKI</a>、<a href="https://data.etagmb.gov.hk/route/KLN" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/KLN</a>、<a href="https://data.etagmb.gov.hk/route/NT" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/NT</a><br>
-        B. 確認地區後，再查指定路線，例如：<a href="https://data.etagmb.gov.hk/route/HKI/1" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/HKI/1</a><br>
-        C. 由路線資料找出 route_id 後，再查方向及各站，例如：<a href="https://data.etagmb.gov.hk/route-stop/2001227/1" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route-stop/2001227/1</a> 或 <a href="https://data.etagmb.gov.hk/route-stop/2001227/2" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route-stop/2001227/2</a><br>
-        D. 找到目標站的 stop_seq 後，把三個值合併成：路線ID-方向序號-站序。<br>
-        <strong>地區 region 常用值：</strong>HKI、KLN、NT。<br>
-        唔知道 Stop ID？可到 <a href="https://hkbushub.netlify.app" target="_blank" rel="noopener noreferrer">hkbushub.netlify.app</a> 查詢巴士站 ID。
-      </div>
+      <div class="settings-note">系統會自動列出每個車站的所有巴士路線。可加入多個車站；KMB/LWB 使用 KMB API；城巴 CTB 使用 DATA.GOV.HK 指定車站 ETA API。<br><strong>綠色小巴 GMB 詳細加入方法：</strong><br>1. 先把「巴士公司」選為 GMB。<br>2. 「巴士站 ID」必須輸入三段格式：<strong>路線ID-方向序號-站序</strong>，例如：2001227-2-1。<br>3. 「顯示名稱」可輸入你想顯示的站名，例如：旺角站、小西灣、觀塘碼頭。<br>4. 「小巴路線編號（顯示用）」請輸入乘客平時見到的路線號，例如：1、16、16A、69A；這個欄位只影響畫面顯示，不會用作 API 查詢。<br>5. 按「儲存並更新」後，畫面會以你輸入的路線號顯示 ETA。<br>6. 若顯示不到 ETA，請先檢查三段 ID 是否正確，特別是方向序號和站序。<br><strong>如何查 GMB 三段 ID：</strong><br>A. 先試地區路線清單：<a href="https://data.etagmb.gov.hk/route/HKI" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/HKI</a>、<a href="https://data.etagmb.gov.hk/route/KLN" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/KLN</a>、<a href="https://data.etagmb.gov.hk/route/NT" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/NT</a><br>B. 確認地區後，再查指定路線，例如：<a href="https://data.etagmb.gov.hk/route/HKI/1" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/HKI/1</a><br>C. 由路線資料找出 route_id 後，再查方向及各站，例如：<a href="https://data.etagmb.gov.hk/route-stop/2001227/1" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route-stop/2001227/1</a> 或 <a href="https://data.etagmb.gov.hk/route-stop/2001227/2" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route-stop/2001227/2</a><br>D. 找到目標站的 stop_seq 後，把三個值合併成：路線ID-方向序號-站序。<br><strong>地區 region 常用值：</strong>HKI、KLN、NT。<br>唔知道 Stop ID？可到 <a href="https://hkbushub.netlify.app" target="_blank" rel="noopener noreferrer">hkbushub.netlify.app</a> 查詢巴士站 ID。</div>
       <div class="settings-actions">
         <button class="primary" id="saveSettingsBtn" type="button">儲存並更新</button>
         <button class="secondary" id="exportSettingsBtn" type="button">匯出設定</button>
@@ -208,435 +125,84 @@
         <button class="secondary" id="cancelSettingsBtn" type="button">取消</button>
         <input id="importSettingsFile" type="file" accept="application/json,.json" hidden />
       </div>
-      <div class="settings-credit">
-        <a href="https://www.threads.com/@bbbeeennnhk" target="_blank" rel="noopener noreferrer">由 Threads@bbbeeennnhk 制作</a>
-      </div>
+      <div class="settings-credit"><a href="https://www.threads.com/@bbbeeennnhk" target="_blank" rel="noopener noreferrer">由 Threads@bbbeeennnhk 制作</a></div>
     </div>
   </section>
   <script>
     const els = {
-      openSettingsBtn: document.getElementById("openSettingsBtn"),
-      settingsBackdrop: document.getElementById("settingsBackdrop"),
-      closeSettingsBtn: document.getElementById("closeSettingsBtn"),
-      cancelSettingsBtn: document.getElementById("cancelSettingsBtn"),
-      saveSettingsBtn: document.getElementById("saveSettingsBtn"),
-      exportSettingsBtn: document.getElementById("exportSettingsBtn"),
-      importSettingsBtn: document.getElementById("importSettingsBtn"),
-      importSettingsFile: document.getElementById("importSettingsFile"),
-      addStationBtn: document.getElementById("addStationBtn"),
-      stationList: document.getElementById("stationList"),
-      refreshSeconds: document.getElementById("refreshSeconds"),
-      themeSelect: document.getElementById("themeSelect"),
-      systemTime: document.getElementById("systemTime"),
-      systemDate: document.getElementById("systemDate"),
-      statusDot: document.getElementById("statusDot"),
-      forceRefreshBtn: document.getElementById("forceRefreshBtn"),
-      weatherContent: document.getElementById("weatherContent"),
-      weatherUpdated: document.getElementById("weatherUpdated"),
-      stationsWrap: document.getElementById("stationsWrap")
+      openSettingsBtn:document.getElementById("openSettingsBtn"), settingsBackdrop:document.getElementById("settingsBackdrop"),
+      closeSettingsBtn:document.getElementById("closeSettingsBtn"), cancelSettingsBtn:document.getElementById("cancelSettingsBtn"),
+      saveSettingsBtn:document.getElementById("saveSettingsBtn"), exportSettingsBtn:document.getElementById("exportSettingsBtn"),
+      importSettingsBtn:document.getElementById("importSettingsBtn"), importSettingsFile:document.getElementById("importSettingsFile"),
+      addStationBtn:document.getElementById("addStationBtn"), stationList:document.getElementById("stationList"),
+      refreshSeconds:document.getElementById("refreshSeconds"), themeSelect:document.getElementById("themeSelect"),
+      systemTime:document.getElementById("systemTime"), systemDate:document.getElementById("systemDate"),
+      statusDot:document.getElementById("statusDot"), forceRefreshBtn:document.getElementById("forceRefreshBtn"),
+      weatherContent:document.getElementById("weatherContent"), weatherUpdated:document.getElementById("weatherUpdated"),
+      stationsWrap:document.getElementById("stationsWrap")
     };
-    let timer = null, nextRefreshAt = 0, lastWidgetRefreshAt = 0;
-    const WIDGET_REFRESH_MS = 10 * 60 * 1000;
-    let lastUpdatedText = "", stopData = {};
-    let stationSettings = [{ company: "KMB", id: "", name: "", hiddenRoutes: "", routeCode: "" }];
-
-    const ICLOUD_CALENDAR_URL = "https://p403-calendars.icloud.com/published/2/MTkzNDE2OTY4MTE5MzQxNlzQGcyICSJVw2Ja5NxAq_AmN_Dfc9Q3KC9ptgy8EYEncaFPqwa6tWJ1JP8qLLpidQfykMSqTUvIWarN9Vyf8z8";
-
-    function safeText(value) { return String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char])); }
-    function normalizeStopId(value) { return String(value || "").trim().replace(/\s/g, "").toUpperCase(); }
-    function normalizeCompany(value) { const v = String(value || "KMB").toUpperCase(); if (v === "CTB") return "CTB"; if (v === "GMB") return "GMB"; return "KMB"; }
-    function stationKey(stop) { return stop.company + stop.id; }
-    function companyLabel(company) { if (company === "CTB") return "城巴 CTB"; if (company === "GMB") return "綠色小巴 GMB"; return "KMB / LWB"; }
-    function createEmptyStation() { return { company: "KMB", id: "", name: "", hiddenRoutes: "", routeCode: "" }; }
-
-    function updateStationSettingsFromForm() {
-      const rows = Array.from(els.stationList.querySelectorAll(".station-box"));
-      stationSettings = rows.map(row => ({
-        company: normalizeCompany(row.querySelector(".company-input")?.value || "KMB"),
-        id: normalizeStopId(row.querySelector(".stop-id-input")?.value || ""),
-        name: String(row.querySelector(".stop-name-input")?.value || "").trim(),
-        hiddenRoutes: String(row.querySelector(".hide-routes-input")?.value || "").trim(),
-        routeCode: String(row.querySelector(".route-code-input")?.value || "").trim()
-      })).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || normalizeCompany(station.company) !== "KMB" || list.length === 1);
-      if (!stationSettings.length) stationSettings = [createEmptyStation()];
-    }
-
-    function renderStationSettings() {
-      if (!stationSettings.length) stationSettings = [createEmptyStation()];
-      els.stationList.innerHTML = stationSettings.map((station, index) => `
-        <div class="station-box" data-index="${index}">
-          <div class="station-head">
-            <div class="station-label">車站 ${index + 1}</div>
-            ${stationSettings.length > 1 ? `<button class="remove-station-btn" type="button" data-remove-index="${index}">刪除</button>` : ""}
-          </div>
-          <div class="form-grid">
-            <div>
-              <label for="company-${index}">巴士公司</label>
-              <select id="company-${index}" class="company-input">
-                <option value="KMB" ${normalizeCompany(station.company) === "KMB" ? "selected" : ""}>KMB / LWB</option>
-                <option value="CTB" ${normalizeCompany(station.company) === "CTB" ? "selected" : ""}>城巴 CTB</option>
-                <option value="GMB" ${normalizeCompany(station.company) === "GMB" ? "selected" : ""}>綠色小巴 GMB</option>
-              </select>
-            </div>
-            <div>
-              <label for="stop-${index}">巴士站 ID${normalizeCompany(station.company) === "GMB" ? "（路線ID-方向-站序）" : ""}</label>
-              <input id="stop-${index}" class="stop-id-input" type="text" inputmode="latin" autocomplete="off" value="${safeText(station.id)}" placeholder="${normalizeCompany(station.company) === "GMB" ? "例如：2006408-1-1" : "KMB：C78F66DF6FA871B6｜城巴：001001"}" />
-            </div>
-            <div>
-              <label for="name-${index}">顯示名稱</label>
-              <input id="name-${index}" class="stop-name-input" type="text" autocomplete="off" value="${safeText(station.name)}" placeholder="例如：青衣邨宜業樓 / 中環碼頭" />
-            </div>
-            <div>
-              <label for="hide-routes-${index}">隱藏路線</label>
-              <input id="hide-routes-${index}" class="hide-routes-input" type="text" autocomplete="off" value="${safeText(station.hiddenRoutes || "")}" placeholder="例如：970,970X,A21" />
-            </div>
-            ${normalizeCompany(station.company) === "GMB" ? `
-            <div>
-              <label for="route-code-${index}">小巴路線編號（顯示用）</label>
-              <input id="route-code-${index}" class="route-code-input" type="text" autocomplete="off" value="${safeText(station.routeCode || "")}" placeholder="例如：1" />
-            </div>` : ""}
-          </div>
-        </div>`).join("");
-      els.stationList.querySelectorAll("input, select").forEach(input => {
-        input.addEventListener("input", updateStationSettingsFromForm);
-        input.addEventListener("change", () => { updateStationSettingsFromForm(); if (input.classList.contains("company-input")) renderStationSettings(); });
-      });
-      els.stationList.querySelectorAll(".remove-station-btn").forEach(button => {
-        button.addEventListener("click", () => {
-          updateStationSettingsFromForm();
-          stationSettings.splice(Number(button.dataset.removeIndex), 1);
-          if (!stationSettings.length) stationSettings = [createEmptyStation()];
-          renderStationSettings();
-        });
-      });
-    }
-
-    function getStops() {
-      updateStationSettingsFromForm();
-      return stationSettings.map((station, index) => ({
-        number: index + 1, company: normalizeCompany(station.company), id: normalizeStopId(station.id),
-        name: station.name.trim() || `車站 ${index + 1}`, hiddenRoutes: String(station.hiddenRoutes || "").trim(),
-        routeCode: String(station.routeCode || "").trim()
-      })).filter(station => station.id);
-    }
-
-    function buildApiUrl(stop) {
-      if (stop.company === "CTB") return `https://rt.data.gov.hk/v1/transport/batch/stop-eta/CTB/${encodeURIComponent(stop.id)}?lang=zh-hant`;
-      if (stop.company === "GMB") {
-        const parts = String(stop.id).split("-");
-        if (parts.length < 3 || !parts[0] || !parts[1] || !parts[2]) throw new Error("GMB Stop ID 格式不正確，需為：路線ID-方向序號-站序");
-        return `https://data.etagmb.gov.hk/eta/route-stop/${encodeURIComponent(parts[0])}/${encodeURIComponent(parts[1])}/${encodeURIComponent(parts[2])}`;
-      }
-      return `https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${encodeURIComponent(stop.id)}`;
-    }
-
-    function parseEta(value) { if (!value) return null; const date = new Date(value); return Number.isNaN(date.getTime()) ? null : date; }
-    function getMinutes(date) { return Math.max(0, Math.ceil((date.getTime() - Date.now()) / 60000)); }
-    /* CHANGED: en-GB + hour12: true */
-    function formatClock(date) { return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true }).format(date); }
-    /* CHANGED: en-GB + hour12: true */
-    function updateSystemTime() {
-      const now = new Date();
-      els.systemTime.textContent = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).format(now);
-      els.systemDate.textContent = new Intl.DateTimeFormat("en-GB", { year: "numeric", month: "short", day: "2-digit", weekday: "short" }).format(now);
-    }
-    function getDestination(item) { return String(item.dest_tc || item.dest || item.dest_en || item.dest_sc || "").trim(); }
-
-    function groupByRoute(items) {
-      const groups = new Map();
-      for (const item of items) {
-        const route = String(item.route).toUpperCase();
-        if (!route) continue;
-        const etaDate = parseEta(item.eta);
-        if (!etaDate) continue;
-        const dest = getDestination(item);
-        const dir = String(item.dir).toUpperCase();
-        const key = route + dest + dir;
-        if (!groups.has(key)) groups.set(key, { route, dest, dir, rows: [] });
-        groups.get(key).rows.push({ eta: etaDate, seq: Number(item.eta_seq || item.seq || 0) });
-      }
-      return Array.from(groups.values()).map(group => {
-        group.rows.sort((a, b) => a.eta - b.eta || a.seq - b.seq);
-        const unique = [], used = new Set();
-        for (const row of group.rows) { const key = row.eta.getTime(); if (used.has(key)) continue; used.add(key); unique.push(row); if (unique.length >= 3) break; }
-        return { ...group, rows: unique };
-      }).sort((a, b) => {
-        const routeCompare = String(a.route).localeCompare(String(b.route), "en", { numeric: true });
-        if (routeCompare !== 0) return routeCompare;
-        /* CHANGED: en-GB */
-        return String(a.dest + a.dir).localeCompare(String(b.dest + b.dir), "en-GB");
-      });
-    }
-
-    function renderAllStops() {
-      const stops = getStops();
-      if (!stops.length) { els.stationsWrap.innerHTML = `<div class="hint">請按左上角 ⚙ 輸入最少一個巴士站 ID。<br>支援 KMB/LWB、城巴 CTB 及綠色小巴 GMB</div>`; updateStatusDot("idle"); return; }
-      els.stationsWrap.innerHTML = stops.map(stop => {
-        const hiddenSet = new Set(String(stop.hiddenRoutes).split(",").map(x => x.trim().toUpperCase()).filter(Boolean));
-        const groups = groupByRoute(stopData[stationKey(stop)] || []).filter(group => { const routeUp = String(group.route).toUpperCase(); const destUp = String(group.dest).toUpperCase(); return !hiddenSet.has(routeUp) && !hiddenSet.has(destUp); });
-        return `<section class="station-section active"><div class="stop-title"><div class="stop-name">${safeText(stop.name)}</div><div class="stop-meta">${safeText(companyLabel(stop.company))}｜Updated: ${safeText(lastUpdatedText)}｜Stop ID: ${safeText(stop.id)}</div></div><section class="list">${renderRoutes(groups)}</section></section>`;
-      }).join("");
-      document.title = stops[0].name + " ETA";
-    }
-
-    function renderRoutes(groups) {
-      if (!groups.length) return `<div class="empty">未有到站資料<br>請檢查 Stop ID</div>`;
-      return groups.map(group => {
-        const first = group.rows[0];
-        const mins = first ? getMinutes(first.eta) : null;
-        const isNow = mins !== null && mins <= 1;
-        const nextTimes = group.rows.slice(1).map(row => { const nextMins = getMinutes(row.eta); return `<span class="next-pill">${nextMins <= 1 ? "now" : nextMins}</span>`; }).join("");
-        return `<article class="route-dot"><div class="route-no">${safeText(group.route)}</div>${group.dest ? `<div class="route-dest" title="${safeText(group.dest)}">${safeText(group.dest)}</div>` : ""}<div class="first-eta ${isNow ? "now" : ""}">${mins === null ? "--" : isNow ? "now" : mins}<span class="unit">min</span></div><div class="next-times">${nextTimes}${first ? ` <span class="next-pill">${formatClock(first.eta)}</span>` : ""}</div></article>`;
-      }).join("");
-    }
-
-    function updateStatusDot(status) {
-      if (status === "loading") { els.statusDot.textContent = "⏳"; els.statusDot.title = "Loading"; }
-      else if (status === "ok") { const secondsLeft = nextRefreshAt ? Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1000)) : 0; els.statusDot.textContent = secondsLeft || "✓"; els.statusDot.title = secondsLeft ? `Update in ${secondsLeft}s` : "Updated"; }
-      else if (status === "error") { els.statusDot.textContent = "!"; els.statusDot.title = "Update failed"; }
-      else { els.statusDot.textContent = "○"; els.statusDot.title = "Idle"; }
-    }
-
-    function weatherIcon(icon) { const map = {50:"☀",51:"⛅",52:"☁",53:"☁",54:"🌧",60:"🌧",61:"🌧",62:"🌧",63:"🌧",64:"🌧",65:"🌧",70:"🌙",71:"🌙",72:"🌙",73:"🌙",74:"🌙",75:"🌙",76:"🌫",77:"🌫",80:"⛈",81:"⛈",82:"⛈",83:"⛈",84:"⛈",90:"🌡",91:"🌦",92:"🌦",93:"🌦"}; return map[Number(icon)] || "🌤"; }
-    function hkoValue(list, place) { if (!Array.isArray(list)) return "--"; return list.find(item => item.place === place)?.value ?? "--"; }
-
-    async function fetchHongKongWeather() {
-      try {
-        const currentBase = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread";
-        const forecastBase = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=flw";
-        const [currentEnResponse, currentTcResponse, forecastEnResponse, forecastTcResponse] = await Promise.all([
-          fetch(currentBase + "&lang=en", { cache: "no-store" }), fetch(currentBase + "&lang=tc", { cache: "no-store" }),
-          fetch(forecastBase + "&lang=en", { cache: "no-store" }), fetch(forecastBase + "&lang=tc", { cache: "no-store" })
-        ]);
-        if (![currentEnResponse, currentTcResponse, forecastEnResponse, forecastTcResponse].every(response => response.ok)) throw new Error("HKO API unavailable");
-        const [en, tc, forecastEn, forecastTc] = await Promise.all([currentEnResponse.json(), currentTcResponse.json(), forecastEnResponse.json(), forecastTcResponse.json()]);
-        const temperature = hkoValue(tc.temperature?.data, "香港天文台");
-        const humidity = hkoValue(tc.humidity?.data, "香港天文台");
-        const icon = tc.icon?.[0] ?? en.icon?.[0];
-        els.weatherContent.innerHTML = `<div class="weather-main"><div class="weather-icon" aria-hidden="true">${weatherIcon(icon)}</div><div><div class="weather-temp">${safeText(temperature)}°C</div><div class="weather-range">Humidity ${safeText(humidity)}%</div></div></div><div class="weather-desc">${safeText(forecastEn.forecastDesc || forecastTc.forecastDesc || "")}</div>`;
-        const observed = new Date(tc.temperature?.recordTime || tc.updateTime || Date.now());
-        /* CHANGED: en-GB + hour12: true */
-        els.weatherUpdated.textContent = "HKO " + new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true }).format(observed);
-      } catch {
-        els.weatherContent.textContent = "Weather data temporarily unavailable.";
-        els.weatherUpdated.textContent = "HKO";
-      }
-    }
-
-    /* ========== Apple Calendar (iCloud ICS) ========== */
-    function decodeIcsText(value) { return String(value || "").replace(/\\n/gi, "\n").replace(/\\,/g, ",").replace(/\\;/g, ";").replace(/\\\\/g, "\\"); }
-    function parseIcsDate(value) {
-      const clean = String(value || "").trim();
-      if (!/^\d{8}(T\d{6}Z?)?$/.test(clean)) return null;
-      const year = Number(clean.slice(0, 4)), month = Number(clean.slice(4, 6)) - 1, day = Number(clean.slice(6, 8));
-      if (clean.length === 8) return { date: new Date(year, month, day), allDay: true };
-      const hour = Number(clean.slice(9, 11)), minute = Number(clean.slice(11, 13)), second = Number(clean.slice(13, 15));
-      const date = clean.endsWith("Z") ? new Date(Date.UTC(year, month, day, hour, minute, second)) : new Date(year, month, day, hour, minute, second);
-      return Number.isNaN(date.getTime()) ? null : { date, allDay: false };
-    }
-    function parseIcs(ics) {
-      const cleaned = String(ics).replace(/^\uFEFF/, "");
-      const unfolded = cleaned.replace(/\r?\n[ \t]/g, "");
-      return unfolded.split("BEGIN:VEVENT").slice(1).map(block => {
-        const fields = {};
-        block.split(/\r?\n/).forEach(line => { const match = line.match(/^([A-Z-]+)(?:;[^:]*)?:(.*)$/); if (match && fields[match[1]] == null) fields[match[1]] = decodeIcsText(match[2]); });
-        const start = parseIcsDate(fields.DTSTART);
-        if (!start || fields.STATUS === "CANCELLED") return null;
-        return { title: fields.SUMMARY || "(No title)", location: fields.LOCATION || "", ...start };
-      }).filter(Boolean);
-    }
-    function eventIsRelevant(event) { const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return event.allDay ? event.date >= today : event.date >= new Date(now.getTime() - 60 * 60 * 1000); }
-    /* CHANGED: en-GB + hour12: true */
-    function eventDateLabel(event) {
-      const dateText = new Intl.DateTimeFormat("en-GB", { month: "short", day: "2-digit", weekday: "short" }).format(event.date);
-      if (event.allDay) return dateText + "\nAll day";
-      const timeText = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true }).format(event.date);
-      return dateText + "\n" + timeText;
-    }
-    function renderAppleCalendarEvents(events) {
-      const list = document.getElementById("appleCalendarList");
-      if (!list) return;
-      list.replaceChildren();
-      const upcoming = events.filter(eventIsRelevant).sort((a, b) => a.date - b.date).slice(0, 12);
-      if (!upcoming.length) { const empty = document.createElement("div"); empty.className = "icloud-calendar-status"; empty.textContent = "No upcoming events."; list.appendChild(empty); return; }
-      upcoming.forEach(event => {
-        const row = document.createElement("div"); row.className = "icloud-event";
-        const time = document.createElement("div"); time.className = "icloud-event-time"; time.textContent = eventDateLabel(event);
-        const details = document.createElement("div");
-        const title = document.createElement("div"); title.className = "icloud-event-title"; title.textContent = event.title;
-        details.appendChild(title);
-        if (event.location) { const location = document.createElement("div"); location.className = "icloud-event-meta"; location.textContent = event.location; details.appendChild(location); }
-        row.append(time, details);
-        list.appendChild(row);
-      });
-    }
-
-    async function fetchIcloudIcs() {
-      const urls = [
-        "https://api.allorigins.win/raw?url=" + encodeURIComponent(ICLOUD_CALENDAR_URL),
-        "https://corsproxy.io/?url=" + encodeURIComponent(ICLOUD_CALENDAR_URL),
-        "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(ICLOUD_CALENDAR_URL)
-      ];
-      let lastError;
-      for (const url of urls) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000);
-        try {
-          const response = await fetch(url, { cache: "no-store", signal: controller.signal });
-          if (!response.ok) throw new Error("HTTP " + response.status);
-          const ics = await response.text();
-          if (!ics.includes("BEGIN:VCALENDAR") && !ics.includes("BEGIN:VEVENT")) throw new Error("Invalid calendar data");
-          return ics;
-        } catch (error) { lastError = error; } finally { clearTimeout(timeout); }
-      }
-      throw lastError || new Error("Failed to load iCloud Calendar");
-    }
-
-    async function refreshAppleCalendar() {
-      const list = document.getElementById("appleCalendarList");
-      if (!list) return;
-      list.innerHTML = '<div class="icloud-calendar-status">Loading Apple Calendar…</div>';
-      try { renderAppleCalendarEvents(parseIcs(await fetchIcloudIcs())); }
-      catch (error) { list.innerHTML = '<div class="icloud-calendar-status">Failed to load Apple Calendar. Please check the public calendar link or network connection.</div>'; console.error("Apple Calendar error:", error); }
-    }
-
-    function refreshSlowWidgets() { lastWidgetRefreshAt = Date.now(); refreshAppleCalendar(); fetchHongKongWeather(); }
-
-    /* ========== ETA Fetching ========== */
-    async function fetchJsonWithFallback(apiUrl) {
-      const urls = [apiUrl, "https://api.allorigins.win/raw?url=" + encodeURIComponent(apiUrl), "https://corsproxy.io/?url=" + encodeURIComponent(apiUrl)];
-      let lastError;
-      for (const url of urls) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 12000);
-        try { const response = await fetch(url, { cache: "no-store", signal: controller.signal }); if (!response.ok) throw new Error("HTTP " + response.status); return await response.json(); }
-        catch (error) { lastError = error; } finally { clearTimeout(timeout); }
-      }
-      throw new Error(lastError?.message || "Load failed");
-    }
-
-    async function fetchEta() {
-      const stops = getStops();
-      if (!stops.length) { updateStatusDot("idle"); els.stationsWrap.innerHTML = `<div class="error">請按左上角 ⚙ 輸入最少一個巴士站 ID。</div>`; return; }
-      updateStatusDot("loading");
-      try {
-        const results = await Promise.all(stops.map(async stop => {
-          const json = await fetchJsonWithFallback(buildApiUrl(stop));
-          if (stop.company === "GMB") {
-            const etaList = json.data?.eta || [];
-            const routeLabel = stop.routeCode || "小巴";
-            const rows = etaList.filter(item => item.timestamp).map((item, index) => ({ route: routeLabel, dest_tc: stop.name || "", dest_en: stop.name || "", eta: item.timestamp, eta_seq: item.eta_seq ?? index + 1, rmk_tc: item.remarks_tc || "", rmk_en: item.remarks_en || "" }));
-            return { key: stationKey(stop), data: rows };
-          }
-          return { key: stationKey(stop), data: json.data || [] };
-        }));
-        stopData = {};
-        for (const result of results) stopData[result.key] = result.data;
-        /* CHANGED: en-GB + hour12: true */
-        lastUpdatedText = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).format(new Date());
-        renderAllStops();
-        nextRefreshAt = Date.now() + Number(els.refreshSeconds.value) * 1000;
-        updateStatusDot("ok"); saveSettings();
-        clearTimeout(timer); timer = setTimeout(fetchEta, Number(els.refreshSeconds.value) * 1000);
-      } catch (error) {
-        els.stationsWrap.innerHTML = `<div class="error">無法讀取公開 API。<br>請檢查巴士公司、Stop ID 或網絡連線；系統已自動嘗試直接連線及兩個 CORS 備用通道。<br>錯誤：${safeText(error.message)}</div>`;
-        nextRefreshAt = Date.now() + Number(els.refreshSeconds.value) * 1000;
-        updateStatusDot("error");
-      }
-    }
-
-    /* ========== Settings Export/Import ========== */
-    function saveSettings() {
-      updateStationSettingsFromForm();
-      const data = {
-        stations: stationSettings.map(station => ({ company: normalizeCompany(station.company), id: normalizeStopId(station.id), name: String(station.name || "").trim(), hiddenRoutes: String(station.hiddenRoutes || "").trim(), routeCode: String(station.routeCode || "").trim() })).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || list.length === 1),
-        refreshSeconds: els.refreshSeconds.value, theme: els.themeSelect.value
-      };
-      localStorage.setItem("hkBusEtaSettings", JSON.stringify(data));
-    }
-    function getSettingsData() {
-      updateStationSettingsFromForm();
-      return { version: 1, exportedAt: new Date().toISOString(), stations: stationSettings.map(station => ({ company: normalizeCompany(station.company), id: normalizeStopId(station.id), name: String(station.name || "").trim(), hiddenRoutes: String(station.hiddenRoutes || "").trim(), routeCode: String(station.routeCode || "").trim() })).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || normalizeCompany(station.company) !== "KMB" || list.length === 1), refreshSeconds: els.refreshSeconds.value, theme: els.themeSelect.value };
-    }
-    function exportSettings() {
-      const blob = new Blob([JSON.stringify(getSettingsData(), null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a"); link.href = url; link.download = "hk-bus-eta-settings.json";
-      document.body.appendChild(link); link.click(); link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
-    async function importSettings(file) {
-      try {
-        const data = JSON.parse(await file.text());
-        if (!data || typeof data !== "object") throw new Error("Invalid settings file");
-        if (data.version != null && data.version !== 1) throw new Error("Unsupported settings version");
-        if (!Array.isArray(data.stations)) throw new Error("No stations in settings file");
-        const normalizedStations = data.stations.map((station, index) => {
-          if (!station || typeof station !== "object") throw new Error(`Station ${index + 1} is invalid`);
-          const company = normalizeCompany(station.company), id = normalizeStopId(station.id || ""), name = String(station.name || "").trim(), hiddenRoutes = String(station.hiddenRoutes || "").trim(), routeCode = String(station.routeCode || "").trim();
-          if (!["KMB", "CTB", "GMB"].includes(company)) throw new Error(`Station ${index + 1} has invalid company`);
-          if (!id && !name && !hiddenRoutes && !routeCode && company === "KMB") throw new Error(`Station ${index + 1} has no usable settings`);
-          return { company, id, name, hiddenRoutes, routeCode };
-        }).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || normalizeCompany(station.company) !== "KMB" || list.length === 1);
-        stationSettings = normalizedStations.length ? normalizedStations : [createEmptyStation()];
-        if (["15", "30", "60"].includes(String(data.refreshSeconds))) els.refreshSeconds.value = String(data.refreshSeconds);
-        if (["light", "dark"].includes(data.theme)) { els.themeSelect.value = data.theme; document.documentElement.setAttribute("data-theme", data.theme); }
-        renderStationSettings(); saveSettings(); closeSettings(); await fetchEta();
-        alert("Settings imported and ETA updated.");
-      } catch (error) { alert(`Failed to import settings: ${error.message}`); }
-      finally { els.importSettingsFile.value = ""; }
-    }
-
-    /* ========== URL Params & Load ========== */
-    function getUrlStations(params) {
-      const stations = [];
-      const firstStop = params.get("stop") || params.get("stop1") || "";
-      if (firstStop) stations.push({ company: normalizeCompany(params.get("co") || params.get("co1") || "KMB"), id: normalizeStopId(firstStop), name: params.get("name") || params.get("name1") || "", hiddenRoutes: params.get("hide") || params.get("hide1") || "", routeCode: params.get("route") || params.get("route1") || "" });
-      for (let i = 2; i <= 20; i += 1) { const stopId = params.get(`stop${i}`) || ""; if (!stopId) continue; stations.push({ company: normalizeCompany(params.get(`co${i}`) || "KMB"), id: normalizeStopId(stopId), name: params.get(`name${i}`) || "", hiddenRoutes: params.get(`hide${i}`) || "", routeCode: params.get(`route${i}`) || "" }); }
-      const repeatedStops = params.getAll("stop");
-      if (repeatedStops.length > 1) return repeatedStops.map((stopId, index) => ({ company: normalizeCompany(params.getAll("co")[index] || params.get("co") || "KMB"), id: normalizeStopId(stopId), name: params.getAll("name")[index] || `車站 ${index + 1}`, hiddenRoutes: params.getAll("hide")[index] || "", routeCode: params.getAll("route")[index] || "" })).filter(station => station.id);
-      return stations.filter(station => station.id);
-    }
-    function loadSettings() {
-      const params = new URLSearchParams(location.search);
-      const urlStations = getUrlStations(params);
-      let saved = {};
-      try { saved = JSON.parse(localStorage.getItem("hkBusEtaSettings") || "{}"); } catch {}
-      if (urlStations.length) { stationSettings = urlStations; }
-      else if (Array.isArray(saved.stations) && saved.stations.length) { stationSettings = saved.stations.map(station => ({ company: normalizeCompany(station.company), id: normalizeStopId(station.id), name: String(station.name || "").trim(), hiddenRoutes: String(station.hiddenRoutes || "").trim(), routeCode: String(station.routeCode || "").trim() })); }
-      else if (saved.stopId1 || saved.stopId2) { stationSettings = [ { company: normalizeCompany(saved.company1), id: normalizeStopId(saved.stopId1), name: saved.stopName1 || "", hiddenRoutes: "", routeCode: "" }, { company: normalizeCompany(saved.company2), id: normalizeStopId(saved.stopId2), name: saved.stopName2 || "", hiddenRoutes: "", routeCode: "" } ].filter(station => station.id || station.name); }
-      else { stationSettings = [createEmptyStation()]; }
-      if (!stationSettings.length) stationSettings = [createEmptyStation()];
-      renderStationSettings();
-      const refresh = params.get("refresh") || saved.refreshSeconds || "30";
-      if (["15", "30", "60"].includes(refresh)) els.refreshSeconds.value = refresh;
-      const theme = saved.theme || "light";
-      els.themeSelect.value = theme;
-      document.documentElement.setAttribute("data-theme", theme);
-      if (urlStations.length || stationSettings.some(station => station.id)) fetchEta();
-      else updateStatusDot("idle");
-    }
-
-    /* ========== UI Events ========== */
-    function openSettings() { els.settingsBackdrop.classList.add("active"); els.settingsBackdrop.setAttribute("aria-hidden", "false"); setTimeout(() => els.stationList.querySelector(".stop-id-input")?.focus(), 80); }
-    function closeSettings() { els.settingsBackdrop.classList.remove("active"); els.settingsBackdrop.setAttribute("aria-hidden", "true"); }
-    els.openSettingsBtn.addEventListener("click", openSettings);
-    els.closeSettingsBtn.addEventListener("click", closeSettings);
-    els.cancelSettingsBtn.addEventListener("click", closeSettings);
-    els.forceRefreshBtn.addEventListener("click", () => { if (els.forceRefreshBtn.classList.contains("spinning")) return; els.forceRefreshBtn.classList.add("spinning"); clearTimeout(timer); refreshSlowWidgets(); fetchEta(); setTimeout(() => els.forceRefreshBtn.classList.remove("spinning"), 500); });
-    els.addStationBtn.addEventListener("click", () => { updateStationSettingsFromForm(); stationSettings.push(createEmptyStation()); renderStationSettings(); setTimeout(() => { const inputs = els.stationList.querySelectorAll(".stop-id-input"); inputs[inputs.length - 1]?.focus(); }, 50); });
-    els.settingsBackdrop.addEventListener("click", event => { if (event.target === els.settingsBackdrop) closeSettings(); });
-    document.addEventListener("keydown", event => { if (event.key === "Escape") closeSettings(); });
-    els.themeSelect.addEventListener("change", () => { document.documentElement.setAttribute("data-theme", els.themeSelect.value); });
-    els.exportSettingsBtn.addEventListener("click", exportSettings);
-    els.importSettingsBtn.addEventListener("click", () => els.importSettingsFile.click());
-    els.importSettingsFile.addEventListener("change", event => { const file = event.target.files?.[0]; if (file) importSettings(file); });
-    els.saveSettingsBtn.addEventListener("click", () => { document.documentElement.setAttribute("data-theme", els.themeSelect.value); saveSettings(); closeSettings(); fetchEta(); });
-    setInterval(() => { updateSystemTime(); if (nextRefreshAt) updateStatusDot("ok"); if (Object.keys(stopData).length) renderAllStops(); }, 1000);
-    updateSystemTime();
-    refreshSlowWidgets();
-    setInterval(refreshSlowWidgets, WIDGET_REFRESH_MS);
-    loadSettings();
+    let timer=null, nextRefreshAt=0, lastWidgetRefreshAt=0;
+    const WIDGET_REFRESH_MS=10*60*1000;
+    let lastUpdatedText="", stopData={};
+    let stationSettings=[{company:"KMB",id:"",name:"",hiddenRoutes:"",routeCode:""}];
+    const ICLOUD_CALENDAR_URL="https://p403-calendars.icloud.com/published/2/MTkzNDE2OTY4MTE5MzQxNlzQGcyICSJVw2Ja5NxAq_AmN_Dfc9Q3KC9ptgy8EYEncaFPqwa6tWJ1JP8qLLpidQfykMSqTUvIWarN9Vyf8z8";
+    function safeText(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
+    function normalizeStopId(v){return String(v||"").trim().replace(/\s/g,"").toUpperCase();}
+    function normalizeCompany(v){const s=String(v||"KMB").toUpperCase();if(s==="CTB")return"CTB";if(s==="GMB")return"GMB";return"KMB";}
+    function stationKey(s){return s.company+s.id;}
+    function companyLabel(c){if(c==="CTB")return"城巴 CTB";if(c==="GMB")return"綠色小巴 GMB";return"KMB / LWB";}
+    function createEmptyStation(){return{company:"KMB",id:"",name:"",hiddenRoutes:"",routeCode:""};}
+    function updateStationSettingsFromForm(){const rows=Array.from(els.stationList.querySelectorAll(".station-box"));stationSettings=rows.map(r=>({company:normalizeCompany(r.querySelector(".company-input")?.value||"KMB"),id:normalizeStopId(r.querySelector(".stop-id-input")?.value||""),name:String(r.querySelector(".stop-name-input")?.value||"").trim(),hiddenRoutes:String(r.querySelector(".hide-routes-input")?.value||"").trim(),routeCode:String(r.querySelector(".route-code-input")?.value||"").trim()})).filter((s,i,l)=>s.id||s.name||s.hiddenRoutes||s.routeCode||normalizeCompany(s.company)!=="KMB"||l.length===1);if(!stationSettings.length)stationSettings=[createEmptyStation()];}
+    function renderStationSettings(){if(!stationSettings.length)stationSettings=[createEmptyStation()];els.stationList.innerHTML=stationSettings.map((s,i)=>`<div class="station-box" data-index="${i}"><div class="station-head"><div class="station-label">車站 ${i+1}</div>${stationSettings.length>1?`<button class="remove-station-btn" type="button" data-remove-index="${i}">刪除</button>`:""}</div><div class="form-grid"><div><label for="company-${i}">巴士公司</label><select id="company-${i}" class="company-input"><option value="KMB" ${normalizeCompany(s.company)==="KMB"?"selected":""}>KMB / LWB</option><option value="CTB" ${normalizeCompany(s.company)==="CTB"?"selected":""}>城巴 CTB</option><option value="GMB" ${normalizeCompany(s.company)==="GMB"?"selected":""}>綠色小巴 GMB</option></select></div><div><label for="stop-${i}">巴士站 ID${normalizeCompany(s.company)==="GMB"?"（路線ID-方向-站序）":""}</label><input id="stop-${i}" class="stop-id-input" type="text" inputmode="latin" autocomplete="off" value="${safeText(s.id)}" placeholder="${normalizeCompany(s.company)==="GMB"?"例如：2006408-1-1":"KMB：C78F66DF6FA871B6｜城巴：001001"}" /></div><div><label for="name-${i}">顯示名稱</label><input id="name-${i}" class="stop-name-input" type="text" autocomplete="off" value="${safeText(s.name)}" placeholder="例如：青衣邨宜業樓 / 中環碼頭" /></div><div><label for="hide-routes-${i}">隱藏路線</label><input id="hide-routes-${i}" class="hide-routes-input" type="text" autocomplete="off" value="${safeText(s.hiddenRoutes||"")}" placeholder="例如：970,970X,A21" /></div>${normalizeCompany(s.company)==="GMB"?`<div><label for="route-code-${i}">小巴路線編號（顯示用）</label><input id="route-code-${i}" class="route-code-input" type="text" autocomplete="off" value="${safeText(s.routeCode||"")}" placeholder="例如：1" /></div>`:""}</div></div>`).join("");els.stationList.querySelectorAll("input, select").forEach(input=>{input.addEventListener("input",updateStationSettingsFromForm);input.addEventListener("change",()=>{updateStationSettingsFromForm();if(input.classList.contains("company-input"))renderStationSettings();});});els.stationList.querySelectorAll(".remove-station-btn").forEach(b=>b.addEventListener("click",()=>{updateStationSettingsFromForm();stationSettings.splice(Number(b.dataset.removeIndex),1);if(!stationSettings.length)stationSettings=[createEmptyStation()];renderStationSettings();}));}
+    function getStops(){updateStationSettingsFromForm();return stationSettings.map((s,i)=>({number:i+1,company:normalizeCompany(s.company),id:normalizeStopId(s.id),name:s.name.trim()||`車站 ${i+1}`,hiddenRoutes:String(s.hiddenRoutes||"").trim(),routeCode:String(s.routeCode||"").trim()})).filter(s=>s.id);}
+    function buildApiUrl(stop){if(stop.company==="CTB")return`https://rt.data.gov.hk/v1/transport/batch/stop-eta/CTB/${encodeURIComponent(stop.id)}?lang=zh-hant`;if(stop.company==="GMB"){const p=String(stop.id).split("-");if(p.length<3||!p[0]||!p[1]||!p[2])throw new Error("GMB Stop ID 格式不正確，需為：路線ID-方向序號-站序");return`https://data.etagmb.gov.hk/eta/route-stop/${encodeURIComponent(p[0])}/${encodeURIComponent(p[1])}/${encodeURIComponent(p[2])}`;}return`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${encodeURIComponent(stop.id)}`;}
+    function parseEta(v){if(!v)return null;const d=new Date(v);return isNaN(d.getTime())?null:d;}
+    function getMinutes(d){return Math.max(0,Math.ceil((d.getTime()-Date.now())/60000));}
+    function formatClock(d){return new Intl.DateTimeFormat("zh-Hant-HK",{hour:"2-digit",minute:"2-digit",hour12:false}).format(d);}
+    function updateSystemTime(){const now=new Date();els.systemTime.textContent=new Intl.DateTimeFormat("zh-Hant-HK",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(now);els.systemDate.textContent=new Intl.DateTimeFormat("zh-Hant-HK",{year:"numeric",month:"2-digit",day:"2-digit",weekday:"short"}).format(now);}
+    function getDestination(item){return String(item.dest_tc||item.dest||item.dest_en||item.dest_sc||"").trim();}
+    function groupByRoute(items){const g=new Map();for(const item of items){const route=String(item.route).toUpperCase();if(!route)continue;const etaDate=parseEta(item.eta);if(!etaDate)continue;const dest=getDestination(item);const dir=String(item.dir).toUpperCase();const key=route+dest+dir;if(!g.has(key))g.set(key,{route,dest,dir,rows:[]});g.get(key).rows.push({eta:etaDate,seq:Number(item.eta_seq||item.seq||0)});}return Array.from(g.values()).map(group=>{group.rows.sort((a,b)=>a.eta-b.eta||a.seq-b.seq);const u=[],used=new Set();for(const r of group.rows){const k=r.eta.getTime();if(used.has(k))continue;used.add(k);u.push(r);if(u.length>=3)break;}return{...group,rows:u};}).sort((a,b)=>{const rc=String(a.route).localeCompare(String(b.route),"en",{numeric:true});if(rc!==0)return rc;return String(a.dest+a.dir).localeCompare(String(b.dest+b.dir),"zh-Hant-HK");});}
+    function renderAllStops(){const stops=getStops();if(!stops.length){els.stationsWrap.innerHTML=`<div class="hint">請按左上角 ⚙ 輸入最少一個巴士站 ID。<br>支援 KMB/LWB、城巴 CTB 及綠色小巴 GMB</div>`;updateStatusDot("idle");return;}els.stationsWrap.innerHTML=stops.map(stop=>{const hiddenSet=new Set(String(stop.hiddenRoutes).split(",").map(x=>x.trim().toUpperCase()).filter(Boolean));const groups=groupByRoute(stopData[stationKey(stop)]||[]).filter(group=>{const ru=String(group.route).toUpperCase();const du=String(group.dest).toUpperCase();return!hiddenSet.has(ru)&&!hiddenSet.has(du);});return`<section class="station-section active"><div class="stop-title"><div class="stop-name">${safeText(stop.name)}</div><div class="stop-meta">${safeText(companyLabel(stop.company))}｜更新：${safeText(lastUpdatedText)}｜Stop ID：${safeText(stop.id)}</div></div><section class="list">${renderRoutes(groups)}</section></section>`;}).join("");document.title=stops[0].name+" ETA";}
+    function renderRoutes(groups){if(!groups.length)return`<div class="empty">未有到站資料<br>請檢查 Stop ID</div>`;return groups.map(group=>{const first=group.rows[0];const mins=first?getMinutes(first.eta):null;const isNow=mins!==null&&mins<=1;const nextTimes=group.rows.slice(1).map(row=>{const nm=getMinutes(row.eta);return`<span class="next-pill">${nm<=1?"now":nm}</span>`;}).join("");return`<article class="route-dot"><div class="route-no">${safeText(group.route)}</div>${group.dest?`<div class="route-dest" title="${safeText(group.dest)}">${safeText(group.dest)}</div>`:""}<div class="first-eta ${isNow?"now":""}">${mins===null?"--":isNow?"now":mins}<span class="unit">分</span></div><div class="next-times">${nextTimes}${first?` <span class="next-pill">${formatClock(first.eta)}</span>`:""}</div></article>`;}).join("");}
+    function updateStatusDot(status){if(status==="loading"){els.statusDot.textContent="⏳";els.statusDot.title="載入中";}else if(status==="ok"){const sl=nextRefreshAt?Math.max(0,Math.ceil((nextRefreshAt-Date.now())/1000)):0;els.statusDot.textContent=sl||"✓";els.statusDot.title=sl?`${sl} 秒後更新`:"已更新";}else if(status==="error"){els.statusDot.textContent="!";els.statusDot.title="更新失敗";}else{els.statusDot.textContent="○";els.statusDot.title="閒置";}}
+    function weatherIcon(icon){const m={50:"☀",51:"⛅",52:"☁",53:"☁",54:"🌧",60:"🌧",61:"🌧",62:"🌧",63:"🌧",64:"🌧",65:"🌧",70:"🌙",71:"🌙",72:"🌙",73:"🌙",74:"🌙",75:"🌙",76:"🌫",77:"🌫",80:"⛈",81:"⛈",82:"⛈",83:"⛈",84:"⛈",90:"🌡",91:"🌦",92:"🌦",93:"🌦"};return m[Number(icon)]||"🌤";}
+    function hkoValue(list,place){if(!Array.isArray(list))return"--";return list.find(item=>item.place===place)?.value??"--";}
+    async function fetchHongKongWeather(){try{const cb="https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread";const fb="https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=flw";const[r1,r2,r3,r4]=await Promise.all([fetch(cb+"&lang=en",{cache:"no-store"}),fetch(cb+"&lang=tc",{cache:"no-store"}),fetch(fb+"&lang=en",{cache:"no-store"}),fetch(fb+"&lang=tc",{cache:"no-store"})]);if(![r1,r2,r3,r4].every(r=>r.ok))throw new Error("HKO API unavailable");const[en,tc,fe,ft]=await Promise.all([r1.json(),r2.json(),r3.json(),r4.json()]);const temp=hkoValue(tc.temperature?.data,"香港天文台");const hum=hkoValue(tc.humidity?.data,"香港天文台");const icon=tc.icon?.[0]??en.icon?.[0];els.weatherContent.innerHTML=`<div class="weather-main"><div class="weather-icon" aria-hidden="true">${weatherIcon(icon)}</div><div><div class="weather-temp">${safeText(temp)}°C</div><div class="weather-range">濕度 ${safeText(hum)}% Relative humidity ${safeText(hum)}%</div></div></div><div class="weather-desc">${safeText(ft.forecastDesc)}</div><div class="weather-desc-en" lang="en">${safeText(fe.forecastDesc||"Today's weather description is not available.")}</div>`;const obs=new Date(tc.temperature?.recordTime||tc.updateTime||Date.now());els.weatherUpdated.textContent="HKO "+new Intl.DateTimeFormat("zh-Hant-HK",{hour:"2-digit",minute:"2-digit",hour12:false}).format(obs);}catch{els.weatherContent.textContent="暫時未能讀取天文台即時天氣及今日預測資料 · Current weather and today's forecast are temporarily unavailable.";els.weatherUpdated.textContent="HKO";}}
+    function decodeIcsText(v){return String(v||"").replace(/\\n/gi,"\n").replace(/\\,/g,",").replace(/\\;/g,";").replace(/\\\\/g,"\\");}
+    function parseIcsDate(v){const c=String(v||"").trim();if(!/^\d{8}(T\d{6}Z?)?$/.test(c))return null;const y=Number(c.slice(0,4)),m=Number(c.slice(4,6))-1,d=Number(c.slice(6,8));if(c.length===8)return{date:new Date(y,m,d),allDay:true};const h=Number(c.slice(9,11)),mi=Number(c.slice(11,13)),s=Number(c.slice(13,15));const date=c.endsWith("Z")?new Date(Date.UTC(y,m,d,h,mi,s)):new Date(y,m,d,h,mi,s);return isNaN(date.getTime())?null:{date,allDay:false};}
+    function parseIcs(ics){const cleaned=String(ics).replace(/^\uFEFF/,"");const unfolded=cleaned.replace(/\r?\n[ \t]/g,"");return unfolded.split("BEGIN:VEVENT").slice(1).map(block=>{const fields={};block.split(/\r?\n/).forEach(line=>{const match=line.match(/^([A-Z-]+)(?:;[^:]*)?:(.*)$/);if(match&&fields[match[1]]==null)fields[match[1]]=decodeIcsText(match[2]);});const start=parseIcsDate(fields.DTSTART);if(!start||fields.STATUS==="CANCELLED")return null;return{title:fields.SUMMARY||"（沒有標題）",location:fields.LOCATION||"",...start};}).filter(Boolean);}
+    function eventIsRelevant(event){const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());return event.allDay?event.date>=today:event.date>=new Date(now.getTime()-60*60*1000);}
+    /* === ONLY CHANGE: Calendar dates in English + 12-hour format === */
+    function eventDateLabel(event){const dateText=new Intl.DateTimeFormat("en-GB",{month:"short",day:"2-digit",weekday:"short"}).format(event.date);if(event.allDay)return dateText+"\nAll day";const timeText=new Intl.DateTimeFormat("en-GB",{hour:"2-digit",minute:"2-digit",hour12:true}).format(event.date);return dateText+"\n"+timeText;}
+    /* === END CHANGE === */
+    function renderAppleCalendarEvents(events){const list=document.getElementById("appleCalendarList");if(!list)return;list.replaceChildren();const upcoming=events.filter(eventIsRelevant).sort((a,b)=>a.date-b.date).slice(0,12);if(!upcoming.length){const empty=document.createElement("div");empty.className="icloud-calendar-status";empty.textContent="未來沒有行程。";list.appendChild(empty);return;}upcoming.forEach(event=>{const row=document.createElement("div");row.className="icloud-event";const time=document.createElement("div");time.className="icloud-event-time";time.textContent=eventDateLabel(event);const details=document.createElement("div");const title=document.createElement("div");title.className="icloud-event-title";title.textContent=event.title;details.appendChild(title);if(event.location){const loc=document.createElement("div");loc.className="icloud-event-meta";loc.textContent=event.location;details.appendChild(loc);}row.append(time,details);list.appendChild(row);});}
+    async function fetchIcloudIcs(){const urls=["https://api.allorigins.win/raw?url="+encodeURIComponent(ICLOUD_CALENDAR_URL),"https://corsproxy.io/?url="+encodeURIComponent(ICLOUD_CALENDAR_URL),"https://api.codetabs.com/v1/proxy/?quest="+encodeURIComponent(ICLOUD_CALENDAR_URL)];let lastError;for(const url of urls){const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),15000);try{const response=await fetch(url,{cache:"no-store",signal:controller.signal});if(!response.ok)throw new Error("HTTP "+response.status);const ics=await response.text();if(!ics.includes("BEGIN:VCALENDAR")&&!ics.includes("BEGIN:VEVENT"))throw new Error("日曆資料格式不正確");return ics;}catch(error){lastError=error;}finally{clearTimeout(timeout);}}throw lastError||new Error("未能讀取 iCloud 日曆");}
+    async function refreshAppleCalendar(){const list=document.getElementById("appleCalendarList");if(!list)return;list.innerHTML='<div class="icloud-calendar-status">正在讀取 Apple 日曆…</div>';try{renderAppleCalendarEvents(parseIcs(await fetchIcloudIcs()));}catch(error){list.innerHTML='<div class="icloud-calendar-status">暫時未能讀取 Apple 日曆。請檢查公開日曆連結或網絡連線。</div>';console.error("Apple Calendar error:",error);}}
+    function refreshSlowWidgets(){lastWidgetRefreshAt=Date.now();refreshAppleCalendar();fetchHongKongWeather();}
+    async function fetchJsonWithFallback(apiUrl){const urls=[apiUrl,"https://api.allorigins.win/raw?url="+encodeURIComponent(apiUrl),"https://corsproxy.io/?url="+encodeURIComponent(apiUrl)];let lastError;for(const url of urls){const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);try{const response=await fetch(url,{cache:"no-store",signal:controller.signal});if(!response.ok)throw new Error("HTTP "+response.status);return await response.json();}catch(error){lastError=error;}finally{clearTimeout(timeout);}}throw new Error(lastError?.message||"Load failed");}
+    async function fetchEta(){const stops=getStops();if(!stops.length){updateStatusDot("idle");els.stationsWrap.innerHTML=`<div class="error">請按左上角 ⚙ 輸入最少一個巴士站 ID。</div>`;return;}updateStatusDot("loading");try{const results=await Promise.all(stops.map(async stop=>{const json=await fetchJsonWithFallback(buildApiUrl(stop));if(stop.company==="GMB"){const etaList=json.data?.eta||[];const routeLabel=stop.routeCode||"小巴";const rows=etaList.filter(item=>item.timestamp).map((item,index)=>({route:routeLabel,dest_tc:stop.name||"",dest_en:stop.name||"",eta:item.timestamp,eta_seq:item.eta_seq??index+1,rmk_tc:item.remarks_tc||"",rmk_en:item.remarks_en||""}));return{key:stationKey(stop),data:rows};}return{key:stationKey(stop),data:json.data||[]};}));stopData={};for(const result of results)stopData[result.key]=result.data;lastUpdatedText=new Intl.DateTimeFormat("zh-Hant-HK",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(new Date());renderAllStops();nextRefreshAt=Date.now()+Number(els.refreshSeconds.value)*1000;updateStatusDot("ok");saveSettings();clearTimeout(timer);timer=setTimeout(fetchEta,Number(els.refreshSeconds.value)*1000);}catch(error){els.stationsWrap.innerHTML=`<div class="error">無法讀取公開 API。<br>請檢查巴士公司、Stop ID 或網絡連線；系統已自動嘗試直接連線及兩個 CORS 備用通道。<br>錯誤：${safeText(error.message)}</div>`;nextRefreshAt=Date.now()+Number(els.refreshSeconds.value)*1000;updateStatusDot("error");}}
+    function saveSettings(){updateStationSettingsFromForm();const data={stations:stationSettings.map(s=>({company:normalizeCompany(s.company),id:normalizeStopId(s.id),name:String(s.name||"").trim(),hiddenRoutes:String(s.hiddenRoutes||"").trim(),routeCode:String(s.routeCode||"").trim()})).filter((s,i,l)=>s.id||s.name||s.hiddenRoutes||s.routeCode||l.length===1),refreshSeconds:els.refreshSeconds.value,theme:els.themeSelect.value};localStorage.setItem("hkBusEtaSettings",JSON.stringify(data));}
+    function getSettingsData(){updateStationSettingsFromForm();return{version:1,exportedAt:new Date().toISOString(),stations:stationSettings.map(s=>({company:normalizeCompany(s.company),id:normalizeStopId(s.id),name:String(s.name||"").trim(),hiddenRoutes:String(s.hiddenRoutes||"").trim(),routeCode:String(s.routeCode||"").trim()})).filter((s,i,l)=>s.id||s.name||s.hiddenRoutes||s.routeCode||normalizeCompany(s.company)!=="KMB"||l.length===1),refreshSeconds:els.refreshSeconds.value,theme:els.themeSelect.value};}
+    function exportSettings(){const blob=new Blob([JSON.stringify(getSettingsData(),null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="hk-bus-eta-settings.json";document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+    async function importSettings(file){try{const data=JSON.parse(await file.text());if(!data||typeof data!=="object")throw new Error("設定檔格式不正確");if(data.version!=null&&data.version!==1)throw new Error("設定檔版本不支援");if(!Array.isArray(data.stations))throw new Error("檔案內沒有車站設定");const ns=data.stations.map((s,i)=>{if(!s||typeof s!=="object")throw new Error(`第 ${i+1} 個車站資料無效`);const company=normalizeCompany(s.company),id=normalizeStopId(s.id||""),name=String(s.name||"").trim(),hiddenRoutes=String(s.hiddenRoutes||"").trim(),routeCode=String(s.routeCode||"").trim();if(!["KMB","CTB","GMB"].includes(company))throw new Error(`第 ${i+1} 個車站的巴士公司無效`);if(!id&&!name&&!hiddenRoutes&&!routeCode&&company==="KMB")throw new Error(`第 ${i+1} 個車站沒有任何可用設定`);return{company,id,name,hiddenRoutes,routeCode};}).filter((s,i,l)=>s.id||s.name||s.hiddenRoutes||s.routeCode||normalizeCompany(s.company)!=="KMB"||l.length===1);stationSettings=ns.length?ns:[createEmptyStation()];if(["15","30","60"].includes(String(data.refreshSeconds)))els.refreshSeconds.value=String(data.refreshSeconds);if(["light","dark"].includes(data.theme)){els.themeSelect.value=data.theme;document.documentElement.setAttribute("data-theme",data.theme);}renderStationSettings();saveSettings();closeSettings();await fetchEta();alert("設定已匯入並已更新 ETA。");}catch(error){alert(`無法匯入設定：${error.message}`);}finally{els.importSettingsFile.value="";}}
+    function getUrlStations(params){const stations=[];const firstStop=params.get("stop")||params.get("stop1")||"";if(firstStop)stations.push({company:normalizeCompany(params.get("co")||params.get("co1")||"KMB"),id:normalizeStopId(firstStop),name:params.get("name")||params.get("name1")||"",hiddenRoutes:params.get("hide")||params.get("hide1")||"",routeCode:params.get("route")||params.get("route1")||""});for(let i=2;i<=20;i+=1){const stopId=params.get(`stop${i}`)||"";if(!stopId)continue;stations.push({company:normalizeCompany(params.get(`co${i}`)||"KMB"),id:normalizeStopId(stopId),name:params.get(`name${i}`)||"",hiddenRoutes:params.get(`hide${i}`)||"",routeCode:params.get(`route${i}`)||""});}const rs=params.getAll("stop");if(rs.length>1)return rs.map((stopId,index)=>({company:normalizeCompany(params.getAll("co")[index]||params.get("co")||"KMB"),id:normalizeStopId(stopId),name:params.getAll("name")[index]||`車站 ${index+1}`,hiddenRoutes:params.getAll("hide")[index]||"",routeCode:params.getAll("route")[index]||""})).filter(s=>s.id);return stations.filter(s=>s.id);}
+    function loadSettings(){const params=new URLSearchParams(location.search);const urlStations=getUrlStations(params);let saved={};try{saved=JSON.parse(localStorage.getItem("hkBusEtaSettings")||"{}");}catch{}if(urlStations.length){stationSettings=urlStations;}else if(Array.isArray(saved.stations)&&saved.stations.length){stationSettings=saved.stations.map(s=>({company:normalizeCompany(s.company),id:normalizeStopId(s.id),name:String(s.name||"").trim(),hiddenRoutes:String(s.hiddenRoutes||"").trim(),routeCode:String(s.routeCode||"").trim()}));}else if(saved.stopId1||saved.stopId2){stationSettings=[{company:normalizeCompany(saved.company1),id:normalizeStopId(saved.stopId1),name:saved.stopName1||"",hiddenRoutes:"",routeCode:""},{company:normalizeCompany(saved.company2),id:normalizeStopId(saved.stopId2),name:saved.stopName2||"",hiddenRoutes:"",routeCode:""}].filter(s=>s.id||s.name);}else{stationSettings=[createEmptyStation()];}if(!stationSettings.length)stationSettings=[createEmptyStation()];renderStationSettings();const refresh=params.get("refresh")||saved.refreshSeconds||"30";if(["15","30","60"].includes(refresh))els.refreshSeconds.value=refresh;const theme=saved.theme||"light";els.themeSelect.value=theme;document.documentElement.setAttribute("data-theme",theme);if(urlStations.length||stationSettings.some(s=>s.id))fetchEta();else updateStatusDot("idle");}
+    function openSettings(){els.settingsBackdrop.classList.add("active");els.settingsBackdrop.setAttribute("aria-hidden","false");setTimeout(()=>els.stationList.querySelector(".stop-id-input")?.focus(),80);}
+    function closeSettings(){els.settingsBackdrop.classList.remove("active");els.settingsBackdrop.setAttribute("aria-hidden","true");}
+    els.openSettingsBtn.addEventListener("click",openSettings);
+    els.closeSettingsBtn.addEventListener("click",closeSettings);
+    els.cancelSettingsBtn.addEventListener("click",closeSettings);
+    els.forceRefreshBtn.addEventListener("click",()=>{if(els.forceRefreshBtn.classList.contains("spinning"))return;els.forceRefreshBtn.classList.add("spinning");clearTimeout(timer);refreshSlowWidgets();fetchEta();setTimeout(()=>els.forceRefreshBtn.classList.remove("spinning"),500);});
+    els.addStationBtn.addEventListener("click",()=>{updateStationSettingsFromForm();stationSettings.push(createEmptyStation());renderStationSettings();setTimeout(()=>{const inputs=els.stationList.querySelectorAll(".stop-id-input");inputs[inputs.length-1]?.focus();},50);});
+    els.settingsBackdrop.addEventListener("click",event=>{if(event.target===els.settingsBackdrop)closeSettings();});
+    document.addEventListener("keydown",event=>{if(event.key==="Escape")closeSettings();});
+    els.themeSelect.addEventListener("change",()=>{document.documentElement.setAttribute("data-theme",els.themeSelect.value);});
+    els.exportSettingsBtn.addEventListener("click",exportSettings);
+    els.importSettingsBtn.addEventListener("click",()=>els.importSettingsFile.click());
+    els.importSettingsFile.addEventListener("change",event=>{const file=event.target.files?.[0];if(file)importSettings(file);});
+    els.saveSettingsBtn.addEventListener("click",()=>{document.documentElement.setAttribute("data-theme",els.themeSelect.value);saveSettings();closeSettings();fetchEta();});
+    setInterval(()=>{updateSystemTime();if(nextRefreshAt)updateStatusDot("ok");if(Object.keys(stopData).length)renderAllStops();},1000);
+    updateSystemTime();refreshSlowWidgets();setInterval(refreshSlowWidgets,WIDGET_REFRESH_MS);loadSettings();
   </script>
 </body>
 </html>
