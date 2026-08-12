@@ -147,12 +147,12 @@
         </section>
         <section class="calendar-panel">
           <div class="calendar-head">
-            <div class="calendar-title">今日行程</div>
-            <div class="calendar-subtitle">Apple 日曆</div>
+            <div class="calendar-title">Today's Schedule</div>
+            <div class="calendar-subtitle">Apple Calendar</div>
           </div>
           <div class="gcal-frame-wrap">
             <div id="appleCalendarList" class="icloud-calendar-list">
-              <div class="icloud-calendar-status">正在讀取 Apple 日曆…</div>
+              <div class="icloud-calendar-status">Loading Apple Calendar…</div>
             </div>
           </div>
         </section>
@@ -240,12 +240,9 @@
     let lastUpdatedText = "", stopData = {};
     let stationSettings = [{ company: "KMB", id: "", name: "", hiddenRoutes: "", routeCode: "" }];
 
-    /* FIX: iCloud URL uses "calendars" subdomain, NOT "caldav" */
     const ICLOUD_CALENDAR_URL = "https://p403-calendars.icloud.com/published/2/MTkzNDE2OTY4MTE5MzQxNlzQGcyICSJVw2Ja5NxAq_AmN_Dfc9Q3KC9ptgy8EYEncaFPqwa6tWJ1JP8qLLpidQfykMSqTUvIWarN9Vyf8z8";
 
-    function safeText(value) {
-      return String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char]));
-    }
+    function safeText(value) { return String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char])); }
     function normalizeStopId(value) { return String(value || "").trim().replace(/\s/g, "").toUpperCase(); }
     function normalizeCompany(value) { const v = String(value || "KMB").toUpperCase(); if (v === "CTB") return "CTB"; if (v === "GMB") return "GMB"; return "KMB"; }
     function stationKey(stop) { return stop.company + stop.id; }
@@ -335,11 +332,13 @@
 
     function parseEta(value) { if (!value) return null; const date = new Date(value); return Number.isNaN(date.getTime()) ? null : date; }
     function getMinutes(date) { return Math.max(0, Math.ceil((date.getTime() - Date.now()) / 60000)); }
-    function formatClock(date) { return new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", hour12: false }).format(date); }
+    /* CHANGED: en-GB + hour12: true */
+    function formatClock(date) { return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true }).format(date); }
+    /* CHANGED: en-GB + hour12: true */
     function updateSystemTime() {
       const now = new Date();
-      els.systemTime.textContent = new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(now);
-      els.systemDate.textContent = new Intl.DateTimeFormat("zh-Hant-HK", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short" }).format(now);
+      els.systemTime.textContent = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).format(now);
+      els.systemDate.textContent = new Intl.DateTimeFormat("en-GB", { year: "numeric", month: "short", day: "2-digit", weekday: "short" }).format(now);
     }
     function getDestination(item) { return String(item.dest_tc || item.dest || item.dest_en || item.dest_sc || "").trim(); }
 
@@ -364,7 +363,8 @@
       }).sort((a, b) => {
         const routeCompare = String(a.route).localeCompare(String(b.route), "en", { numeric: true });
         if (routeCompare !== 0) return routeCompare;
-        return String(a.dest + a.dir).localeCompare(String(b.dest + b.dir), "zh-Hant-HK");
+        /* CHANGED: en-GB */
+        return String(a.dest + a.dir).localeCompare(String(b.dest + b.dir), "en-GB");
       });
     }
 
@@ -374,7 +374,7 @@
       els.stationsWrap.innerHTML = stops.map(stop => {
         const hiddenSet = new Set(String(stop.hiddenRoutes).split(",").map(x => x.trim().toUpperCase()).filter(Boolean));
         const groups = groupByRoute(stopData[stationKey(stop)] || []).filter(group => { const routeUp = String(group.route).toUpperCase(); const destUp = String(group.dest).toUpperCase(); return !hiddenSet.has(routeUp) && !hiddenSet.has(destUp); });
-        return `<section class="station-section active"><div class="stop-title"><div class="stop-name">${safeText(stop.name)}</div><div class="stop-meta">${safeText(companyLabel(stop.company))}｜更新：${safeText(lastUpdatedText)}｜Stop ID：${safeText(stop.id)}</div></div><section class="list">${renderRoutes(groups)}</section></section>`;
+        return `<section class="station-section active"><div class="stop-title"><div class="stop-name">${safeText(stop.name)}</div><div class="stop-meta">${safeText(companyLabel(stop.company))}｜Updated: ${safeText(lastUpdatedText)}｜Stop ID: ${safeText(stop.id)}</div></div><section class="list">${renderRoutes(groups)}</section></section>`;
       }).join("");
       document.title = stops[0].name + " ETA";
     }
@@ -386,15 +386,15 @@
         const mins = first ? getMinutes(first.eta) : null;
         const isNow = mins !== null && mins <= 1;
         const nextTimes = group.rows.slice(1).map(row => { const nextMins = getMinutes(row.eta); return `<span class="next-pill">${nextMins <= 1 ? "now" : nextMins}</span>`; }).join("");
-        return `<article class="route-dot"><div class="route-no">${safeText(group.route)}</div>${group.dest ? `<div class="route-dest" title="${safeText(group.dest)}">${safeText(group.dest)}</div>` : ""}<div class="first-eta ${isNow ? "now" : ""}">${mins === null ? "--" : isNow ? "now" : mins}<span class="unit">分</span></div><div class="next-times">${nextTimes}${first ? ` <span class="next-pill">${formatClock(first.eta)}</span>` : ""}</div></article>`;
+        return `<article class="route-dot"><div class="route-no">${safeText(group.route)}</div>${group.dest ? `<div class="route-dest" title="${safeText(group.dest)}">${safeText(group.dest)}</div>` : ""}<div class="first-eta ${isNow ? "now" : ""}">${mins === null ? "--" : isNow ? "now" : mins}<span class="unit">min</span></div><div class="next-times">${nextTimes}${first ? ` <span class="next-pill">${formatClock(first.eta)}</span>` : ""}</div></article>`;
       }).join("");
     }
 
     function updateStatusDot(status) {
-      if (status === "loading") { els.statusDot.textContent = "⏳"; els.statusDot.title = "載入中"; }
-      else if (status === "ok") { const secondsLeft = nextRefreshAt ? Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1000)) : 0; els.statusDot.textContent = secondsLeft || "✓"; els.statusDot.title = secondsLeft ? `${secondsLeft} 秒後更新` : "已更新"; }
-      else if (status === "error") { els.statusDot.textContent = "!"; els.statusDot.title = "更新失敗"; }
-      else { els.statusDot.textContent = "○"; els.statusDot.title = "閒置"; }
+      if (status === "loading") { els.statusDot.textContent = "⏳"; els.statusDot.title = "Loading"; }
+      else if (status === "ok") { const secondsLeft = nextRefreshAt ? Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1000)) : 0; els.statusDot.textContent = secondsLeft || "✓"; els.statusDot.title = secondsLeft ? `Update in ${secondsLeft}s` : "Updated"; }
+      else if (status === "error") { els.statusDot.textContent = "!"; els.statusDot.title = "Update failed"; }
+      else { els.statusDot.textContent = "○"; els.statusDot.title = "Idle"; }
     }
 
     function weatherIcon(icon) { const map = {50:"☀",51:"⛅",52:"☁",53:"☁",54:"🌧",60:"🌧",61:"🌧",62:"🌧",63:"🌧",64:"🌧",65:"🌧",70:"🌙",71:"🌙",72:"🌙",73:"🌙",74:"🌙",75:"🌙",76:"🌫",77:"🌫",80:"⛈",81:"⛈",82:"⛈",83:"⛈",84:"⛈",90:"🌡",91:"🌦",92:"🌦",93:"🌦"}; return map[Number(icon)] || "🌤"; }
@@ -413,11 +413,12 @@
         const temperature = hkoValue(tc.temperature?.data, "香港天文台");
         const humidity = hkoValue(tc.humidity?.data, "香港天文台");
         const icon = tc.icon?.[0] ?? en.icon?.[0];
-        els.weatherContent.innerHTML = `<div class="weather-main"><div class="weather-icon" aria-hidden="true">${weatherIcon(icon)}</div><div><div class="weather-temp">${safeText(temperature)}°C</div><div class="weather-range">濕度 ${safeText(humidity)}% Relative humidity ${safeText(humidity)}%</div></div></div><div class="weather-desc">${safeText(forecastTc.forecastDesc)}</div><div class="weather-desc-en" lang="en">${safeText(forecastEn.forecastDesc || "Today's weather description is not available.")}</div>`;
+        els.weatherContent.innerHTML = `<div class="weather-main"><div class="weather-icon" aria-hidden="true">${weatherIcon(icon)}</div><div><div class="weather-temp">${safeText(temperature)}°C</div><div class="weather-range">Humidity ${safeText(humidity)}%</div></div></div><div class="weather-desc">${safeText(forecastEn.forecastDesc || forecastTc.forecastDesc || "")}</div>`;
         const observed = new Date(tc.temperature?.recordTime || tc.updateTime || Date.now());
-        els.weatherUpdated.textContent = "HKO " + new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", hour12: false }).format(observed);
+        /* CHANGED: en-GB + hour12: true */
+        els.weatherUpdated.textContent = "HKO " + new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true }).format(observed);
       } catch {
-        els.weatherContent.textContent = "暫時未能讀取天文台即時天氣及今日預測資料 · Current weather and today's forecast are temporarily unavailable.";
+        els.weatherContent.textContent = "Weather data temporarily unavailable.";
         els.weatherUpdated.textContent = "HKO";
       }
     }
@@ -441,14 +442,15 @@
         block.split(/\r?\n/).forEach(line => { const match = line.match(/^([A-Z-]+)(?:;[^:]*)?:(.*)$/); if (match && fields[match[1]] == null) fields[match[1]] = decodeIcsText(match[2]); });
         const start = parseIcsDate(fields.DTSTART);
         if (!start || fields.STATUS === "CANCELLED") return null;
-        return { title: fields.SUMMARY || "（沒有標題）", location: fields.LOCATION || "", ...start };
+        return { title: fields.SUMMARY || "(No title)", location: fields.LOCATION || "", ...start };
       }).filter(Boolean);
     }
     function eventIsRelevant(event) { const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return event.allDay ? event.date >= today : event.date >= new Date(now.getTime() - 60 * 60 * 1000); }
+    /* CHANGED: en-GB + hour12: true */
     function eventDateLabel(event) {
-      const dateText = new Intl.DateTimeFormat("zh-Hant-HK", { month: "numeric", day: "numeric", weekday: "short" }).format(event.date);
-      if (event.allDay) return dateText + "\n全日";
-      const timeText = new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", hour12: false }).format(event.date);
+      const dateText = new Intl.DateTimeFormat("en-GB", { month: "short", day: "2-digit", weekday: "short" }).format(event.date);
+      if (event.allDay) return dateText + "\nAll day";
+      const timeText = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true }).format(event.date);
       return dateText + "\n" + timeText;
     }
     function renderAppleCalendarEvents(events) {
@@ -456,7 +458,7 @@
       if (!list) return;
       list.replaceChildren();
       const upcoming = events.filter(eventIsRelevant).sort((a, b) => a.date - b.date).slice(0, 12);
-      if (!upcoming.length) { const empty = document.createElement("div"); empty.className = "icloud-calendar-status"; empty.textContent = "未來沒有行程。"; list.appendChild(empty); return; }
+      if (!upcoming.length) { const empty = document.createElement("div"); empty.className = "icloud-calendar-status"; empty.textContent = "No upcoming events."; list.appendChild(empty); return; }
       upcoming.forEach(event => {
         const row = document.createElement("div"); row.className = "icloud-event";
         const time = document.createElement("div"); time.className = "icloud-event-time"; time.textContent = eventDateLabel(event);
@@ -483,19 +485,19 @@
           const response = await fetch(url, { cache: "no-store", signal: controller.signal });
           if (!response.ok) throw new Error("HTTP " + response.status);
           const ics = await response.text();
-          if (!ics.includes("BEGIN:VCALENDAR") && !ics.includes("BEGIN:VEVENT")) throw new Error("日曆資料格式不正確");
+          if (!ics.includes("BEGIN:VCALENDAR") && !ics.includes("BEGIN:VEVENT")) throw new Error("Invalid calendar data");
           return ics;
         } catch (error) { lastError = error; } finally { clearTimeout(timeout); }
       }
-      throw lastError || new Error("未能讀取 iCloud 日曆");
+      throw lastError || new Error("Failed to load iCloud Calendar");
     }
 
     async function refreshAppleCalendar() {
       const list = document.getElementById("appleCalendarList");
       if (!list) return;
-      list.innerHTML = '<div class="icloud-calendar-status">正在讀取 Apple 日曆…</div>';
+      list.innerHTML = '<div class="icloud-calendar-status">Loading Apple Calendar…</div>';
       try { renderAppleCalendarEvents(parseIcs(await fetchIcloudIcs())); }
-      catch (error) { list.innerHTML = '<div class="icloud-calendar-status">暫時未能讀取 Apple 日曆。請檢查公開日曆連結或網絡連線。</div>'; console.error("Apple Calendar error:", error); }
+      catch (error) { list.innerHTML = '<div class="icloud-calendar-status">Failed to load Apple Calendar. Please check the public calendar link or network connection.</div>'; console.error("Apple Calendar error:", error); }
     }
 
     function refreshSlowWidgets() { lastWidgetRefreshAt = Date.now(); refreshAppleCalendar(); fetchHongKongWeather(); }
@@ -530,7 +532,8 @@
         }));
         stopData = {};
         for (const result of results) stopData[result.key] = result.data;
-        lastUpdatedText = new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(new Date());
+        /* CHANGED: en-GB + hour12: true */
+        lastUpdatedText = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).format(new Date());
         renderAllStops();
         nextRefreshAt = Date.now() + Number(els.refreshSeconds.value) * 1000;
         updateStatusDot("ok"); saveSettings();
@@ -565,22 +568,22 @@
     async function importSettings(file) {
       try {
         const data = JSON.parse(await file.text());
-        if (!data || typeof data !== "object") throw new Error("設定檔格式不正確");
-        if (data.version != null && data.version !== 1) throw new Error("設定檔版本不支援");
-        if (!Array.isArray(data.stations)) throw new Error("檔案內沒有車站設定");
+        if (!data || typeof data !== "object") throw new Error("Invalid settings file");
+        if (data.version != null && data.version !== 1) throw new Error("Unsupported settings version");
+        if (!Array.isArray(data.stations)) throw new Error("No stations in settings file");
         const normalizedStations = data.stations.map((station, index) => {
-          if (!station || typeof station !== "object") throw new Error(`第 ${index + 1} 個車站資料無效`);
+          if (!station || typeof station !== "object") throw new Error(`Station ${index + 1} is invalid`);
           const company = normalizeCompany(station.company), id = normalizeStopId(station.id || ""), name = String(station.name || "").trim(), hiddenRoutes = String(station.hiddenRoutes || "").trim(), routeCode = String(station.routeCode || "").trim();
-          if (!["KMB", "CTB", "GMB"].includes(company)) throw new Error(`第 ${index + 1} 個車站的巴士公司無效`);
-          if (!id && !name && !hiddenRoutes && !routeCode && company === "KMB") throw new Error(`第 ${index + 1} 個車站沒有任何可用設定`);
+          if (!["KMB", "CTB", "GMB"].includes(company)) throw new Error(`Station ${index + 1} has invalid company`);
+          if (!id && !name && !hiddenRoutes && !routeCode && company === "KMB") throw new Error(`Station ${index + 1} has no usable settings`);
           return { company, id, name, hiddenRoutes, routeCode };
         }).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || normalizeCompany(station.company) !== "KMB" || list.length === 1);
         stationSettings = normalizedStations.length ? normalizedStations : [createEmptyStation()];
         if (["15", "30", "60"].includes(String(data.refreshSeconds))) els.refreshSeconds.value = String(data.refreshSeconds);
         if (["light", "dark"].includes(data.theme)) { els.themeSelect.value = data.theme; document.documentElement.setAttribute("data-theme", data.theme); }
         renderStationSettings(); saveSettings(); closeSettings(); await fetchEta();
-        alert("設定已匯入並已更新 ETA。");
-      } catch (error) { alert(`無法匯入設定：${error.message}`); }
+        alert("Settings imported and ETA updated.");
+      } catch (error) { alert(`Failed to import settings: ${error.message}`); }
       finally { els.importSettingsFile.value = ""; }
     }
 
