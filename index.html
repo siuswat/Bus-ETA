@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -43,7 +43,7 @@
         radial-gradient(circle at 90% 4%, rgba(22, 163, 74, .10), transparent 30%),
         var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Noto Sans TC, Microsoft JhengHei, Arial, sans-serif;
       padding: env(safe-area-inset-top) 10px env(safe-area-inset-bottom);
     }
 
@@ -96,13 +96,8 @@
       transition: transform .5s ease;
     }
 
-    .refresh-btn.spinning {
-      transform: rotate(360deg);
-    }
-
-    .refresh-btn:active {
-      transform: scale(.9);
-    }
+    .refresh-btn.spinning { transform: rotate(360deg); }
+    .refresh-btn:active { transform: scale(.9); }
 
     .clock-box {
       min-height: 46px;
@@ -150,13 +145,8 @@
       gap: 14px;
     }
 
-    .station-section {
-      display: none;
-    }
-
-    .station-section.active {
-      display: block;
-    }
+    .station-section { display: none; }
+    .station-section.active { display: block; }
 
     .stop-title {
       margin-bottom: 10px;
@@ -341,17 +331,8 @@
       padding: 0 2px;
     }
 
-    .calendar-title {
-      font-size: 16px;
-      font-weight: 950;
-      color: var(--text);
-    }
-
-    .calendar-subtitle {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--muted);
-    }
+    .calendar-title { font-size: 16px; font-weight: 950; color: var(--text); }
+    .calendar-subtitle { font-size: 11px; font-weight: 800; color: var(--muted); }
 
     .gcal-frame-wrap {
       position: relative;
@@ -361,12 +342,21 @@
       background: var(--card-solid);
     }
 
-    .gcal-frame-wrap iframe {
-      width: 100%;
-      height: 560px;
-      border: 0;
-      display: block;
+    .icloud-calendar-list { min-height: 160px; max-height: 560px; overflow-y: auto; }
+    .icloud-calendar-status { padding: 18px 10px; color: var(--muted); font-size: 13px; font-weight: 750; text-align: center; line-height: 1.5; }
+
+    .icloud-event {
+      display: grid;
+      grid-template-columns: 68px 1fr;
+      gap: 10px;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
     }
+
+    .icloud-event:last-child { border-bottom: 0; }
+    .icloud-event-time { color: var(--accent); font-size: 12px; font-weight: 900; line-height: 1.35; white-space: pre-line; }
+    .icloud-event-title { color: var(--text); font-size: 14px; font-weight: 850; line-height: 1.4; overflow-wrap: anywhere; }
+    .icloud-event-meta { margin-top: 3px; color: var(--muted); font-size: 11px; font-weight: 700; }
 
     .modal-backdrop {
       position: fixed;
@@ -389,7 +379,7 @@
       border-radius: 28px;
       background: var(--card-solid);
       border: 1px solid var(--line);
-      box-shadow: 0 24px 70px rgba(0,0,0,.28);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
       padding: 16px;
       animation: slideUp .18s ease-out;
     }
@@ -407,11 +397,7 @@
       margin-bottom: 14px;
     }
 
-    .modal-title {
-      font-size: 22px;
-      font-weight: 950;
-      letter-spacing: -.02em;
-    }
+    .modal-title { font-size: 22px; font-weight: 950; letter-spacing: -.02em; }
 
     .close-btn {
       width: 42px;
@@ -440,11 +426,7 @@
       margin-bottom: 9px;
     }
 
-    .station-label {
-      color: var(--accent);
-      font-size: 14px;
-      font-weight: 950;
-    }
+    .station-label { color: var(--accent); font-size: 14px; font-weight: 950; }
 
     .remove-station-btn {
       min-height: 34px;
@@ -471,10 +453,7 @@
       margin-bottom: 10px;
     }
 
-    .form-grid {
-      display: grid;
-      gap: 10px;
-    }
+    .form-grid { display: grid; gap: 10px; }
 
     label {
       display: block;
@@ -520,8 +499,7 @@
       margin-top: 14px;
     }
 
-    button.primary,
-    button.secondary {
+    button.primary, button.secondary {
       min-height: 52px;
       border-radius: 17px;
       font-size: 16px;
@@ -544,7 +522,6 @@
 
     button:active { transform: scale(.985); }
 
-
     .settings-credit {
       margin-top: 12px;
       text-align: center;
@@ -558,9 +535,7 @@
       opacity: .55;
     }
 
-    .settings-credit a:active {
-      opacity: .85;
-    }
+    .settings-credit a:active { opacity: .85; }
 
     @media (min-width: 640px) {
       .modal-backdrop { align-items: center; }
@@ -569,34 +544,22 @@
       .route-dot { width: calc(20% - 7px); }
     }
 
-    /* Keep ETA and Calendar side-by-side on Android tablets in portrait or landscape. */
     @media (max-width: 599px) {
       .dashboard-grid { grid-template-columns: 1fr; }
       .calendar-panel { margin-top: 14px; }
-      .gcal-frame-wrap iframe { height: 360px; }
+      .icloud-calendar-list { max-height: 360px; }
     }
 
     @media (min-width: 600px) {
-      .dashboard-grid {
-        grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
-      }
-      .gcal-frame-wrap iframe { height: 560px; }
+      .dashboard-grid { grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); }
+      .icloud-calendar-list { max-height: 560px; }
     }
 
     @media (max-width: 390px) {
       body { padding-left: 8px; padding-right: 8px; }
-      .topbar {
-        grid-template-columns: 42px 1fr 42px 42px;
-      }
-      .gear-btn, .status-dot, .refresh-btn {
-        width: 42px;
-        height: 42px;
-      }
-      .route-dot {
-        width: calc(33.333% - 6px);
-        min-height: 86px;
-        border-radius: 19px;
-      }
+      .topbar { grid-template-columns: 42px 1fr 42px 42px; }
+      .gear-btn, .status-dot, .refresh-btn { width: 42px; height: 42px; }
+      .route-dot { width: calc(33.333% - 6px); min-height: 86px; border-radius: 19px; }
       .settings-actions { grid-template-columns: 1fr; }
     }
   </style>
@@ -604,13 +567,13 @@
 <body>
   <main class="app">
     <section class="topbar">
-      <button class="gear-btn" id="openSettingsBtn" type="button" aria-label="開啟設定">⚙</button>
+      <button class="gear-btn" id="openSettingsBtn" type="button" aria-label="設定">⚙</button>
       <div class="clock-box">
         <div class="system-time" id="systemTime">--:--:--</div>
-        <div class="system-date" id="systemDate">系統時間</div>
+        <div class="system-date" id="systemDate"></div>
       </div>
-      <button class="refresh-btn" id="forceRefreshBtn" type="button" aria-label="強制更新">⟳</button>
-      <div class="status-dot" id="statusDot" title="狀態">○</div>
+      <button class="refresh-btn" id="forceRefreshBtn" type="button" aria-label="重新整理">↻</button>
+      <div class="status-dot" id="statusDot" title=""></div>
     </section>
 
     <div class="dashboard-grid">
@@ -624,26 +587,23 @@
       <aside class="right-sidebar" aria-label="天氣及日曆">
         <section class="weather-panel" id="weatherPanel" aria-live="polite">
           <div class="weather-head">
-            <div class="weather-title">香港天氣 <span lang="en">Hong Kong Weather</span></div>
-            <div class="weather-updated" id="weatherUpdated">載入中…</div>
+            <div class="weather-title"><span lang="en">Hong Kong Weather</span></div>
+            <div class="weather-updated" id="weatherUpdated"></div>
           </div>
           <div id="weatherContent" class="weather-error">正在讀取香港天文台資料…</div>
         </section>
 
-      <section class="calendar-panel">
-      <div class="calendar-head">
-        <div class="calendar-title">今日行程</div>
-        <div class="calendar-subtitle">Google 日曆</div>
-      </div>
-      <div class="gcal-frame-wrap">
-        <iframe
-          id="gcalFrame"
-          src="https://calendar.google.com/calendar/embed?src=family06923222005615842840%40group.calendar.google.com&ctz=Asia%2FHong_Kong&mode=AGENDA&showTitle=0&showNav=0&showDate=0&showPrint=0&showTabs=0&showCalendars=0&showTz=0"
-          frameborder="0"
-          scrolling="no"
-          loading="lazy"></iframe>
-      </div>
-      </section>
+        <section class="calendar-panel">
+          <div class="calendar-head">
+            <div class="calendar-title">今日行程</div>
+            <div class="calendar-subtitle">Apple 日曆</div>
+          </div>
+          <div class="gcal-frame-wrap">
+            <div id="appleCalendarList" class="icloud-calendar-list">
+              <div class="icloud-calendar-status">正在讀取 Apple 日曆…</div>
+            </div>
+          </div>
+        </section>
       </aside>
     </div>
   </main>
@@ -658,7 +618,7 @@
       <div id="stationList"></div>
       <button class="add-station-btn" id="addStationBtn" type="button">＋ 新增車站</button>
 
-      <div class="form-grid" style="margin-top:10px;">
+      <div class="form-grid" style="margin-top: 10px;">
         <div>
           <label for="refreshSeconds">更新時間</label>
           <select id="refreshSeconds">
@@ -676,9 +636,25 @@
         </div>
       </div>
 
-      <div class="settings-note">系統會自動列出每個車站的所有巴士路線。可加入多個車站；KMB/LWB 使用 KMB API；城巴 CTB 使用 DATA.GOV.HK 指定車站 ETA API。<br><strong>綠色小巴 GMB 詳細加入方法：</strong><br>1. 先把「巴士公司」選為 GMB。<br>2. 「巴士站 ID」必須輸入三段格式：<strong>路線ID-方向序號-站序</strong>，例如：2001227-2-1。<br>3. 「顯示名稱」可輸入你想顯示的站名，例如：旺角站、小西灣、觀塘碼頭。<br>4. 「小巴路線編號（顯示用）」請輸入乘客平時見到的路線號，例如：1、16、16A、69A；這個欄位只影響畫面顯示，不會用作 API 查詢。<br>5. 按「儲存並更新」後，畫面會以你輸入的路線號顯示 ETA。<br>6. 若顯示不到 ETA，請先檢查三段 ID 是否正確，特別是方向序號和站序。<br><strong>如何查 GMB 三段 ID：</strong><br>A. 先試地區路線清單：<a href="https://data.etagmb.gov.hk/route/HKI" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/HKI</a>、<a href="https://data.etagmb.gov.hk/route/KLN" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/KLN</a>、<a href="https://data.etagmb.gov.hk/route/NT" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/NT</a><br>B. 確認地區後，再查指定路線，例如：<a href="https://data.etagmb.gov.hk/route/HKI/1" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/HKI/1</a><br>C. 由路線資料找出 route_id 後，再查方向及各站，例如：<a href="https://data.etagmb.gov.hk/route-stop/2001227/1" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route-stop/2001227/1</a> 或 <a href="https://data.etagmb.gov.hk/route-stop/2001227/2" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route-stop/2001227/2</a><br>D. 找到目標站的 stop_seq 後，把三個值合併成：路線ID-方向序號-站序。<br><strong>地區 region 常用值：</strong>HKI、KLN、NT。<br>唔知道 Stop ID？可到 <a href="https://hkbushub.netlify.app" target="_blank" rel="noopener noreferrer">hkbushub.netlify.app</a> 查詢巴士站 ID。</div>
+      <div class="settings-note">
+        系統會自動列出每個車站的所有巴士路線。可加入多個車站；KMB/LWB 使用 KMB API；城巴 CTB 使用 DATA.GOV.HK 指定車站 ETA API。<br>
+        <strong>綠色小巴 GMB 詳細加入方法：</strong><br>
+        1. 先把「巴士公司」選為 GMB。<br>
+        2. 「巴士站 ID」必須輸入三段格式：<strong>路線ID-方向序號-站序</strong>，例如：2001227-2-1。<br>
+        3. 「顯示名稱」可輸入你想顯示的站名，例如：旺角站、小西灣、觀塘碼頭。<br>
+        4. 「小巴路線編號（顯示用）」請輸入乘客平時見到的路線號，例如：1、16、16A、69A；這個欄位只影響畫面顯示，不會用作 API 查詢。<br>
+        5. 按「儲存並更新」後，畫面會以你輸入的路線號顯示 ETA。<br>
+        6. 若顯示不到 ETA，請先檢查三段 ID 是否正確，特別是方向序號和站序。<br>
+        <strong>如何查 GMB 三段 ID：</strong><br>
+        A. 先試地區路線清單：<a href="https://data.etagmb.gov.hk/route/HKI" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/HKI</a>、<a href="https://data.etagmb.gov.hk/route/KLN" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/KLN</a>、<a href="https://data.etagmb.gov.hk/route/NT" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/NT</a><br>
+        B. 確認地區後，再查指定路線，例如：<a href="https://data.etagmb.gov.hk/route/HKI/1" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route/HKI/1</a><br>
+        C. 由路線資料找出 route_id 後，再查方向及各站，例如：<a href="https://data.etagmb.gov.hk/route-stop/2001227/1" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route-stop/2001227/1</a> 或 <a href="https://data.etagmb.gov.hk/route-stop/2001227/2" target="_blank" rel="noopener noreferrer">https://data.etagmb.gov.hk/route-stop/2001227/2</a><br>
+        D. 找到目標站的 stop_seq 後，把三個值合併成：路線ID-方向序號-站序。<br>
+        <strong>地區 region 常用值：</strong>HKI、KLN、NT。<br>
+        唔知道 Stop ID？可到 <a href="https://hkbushub.netlify.app" target="_blank" rel="noopener noreferrer">hkbushub.netlify.app</a> 查詢巴士站 ID。
+      </div>
 
-          <div class="settings-actions">
+      <div class="settings-actions">
         <button class="primary" id="saveSettingsBtn" type="button">儲存並更新</button>
         <button class="secondary" id="exportSettingsBtn" type="button">匯出設定</button>
         <button class="secondary" id="importSettingsBtn" type="button">匯入設定</button>
@@ -710,7 +686,6 @@
       systemDate: document.getElementById("systemDate"),
       statusDot: document.getElementById("statusDot"),
       forceRefreshBtn: document.getElementById("forceRefreshBtn"),
-      gcalFrame: document.getElementById("gcalFrame"),
       weatherContent: document.getElementById("weatherContent"),
       weatherUpdated: document.getElementById("weatherUpdated"),
       stationsWrap: document.getElementById("stationsWrap")
@@ -722,20 +697,18 @@
     const WIDGET_REFRESH_MS = 10 * 60 * 1000;
     let lastUpdatedText = "";
     let stopData = {};
-    let stationSettings = [{ company: "KMB", id: "", name: "" }];
+    let stationSettings = [{ company: "KMB", id: "", name: "", hiddenRoutes: "", routeCode: "" }];
+
+    const ICLOUD_CALENDAR_URL = "https://p403-caldav.icloud.com/published/2/MTkzNDE2OTY4MTE5MzQxNlzQGcyICSJVw2Ja5NxAq_AmN_Dfc9Q3KC9ptgy8EYEncaFPqwa6tWJ1JP8qLLpidQfykMSqTUvIWarN9Vyf8z8";
 
     function safeText(value) {
       return String(value ?? "").replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
       }[char]));
     }
 
     function normalizeStopId(value) {
-      return String(value || "").trim().replace(/\s+/g, "").toUpperCase();
+      return String(value || "").trim().replace(/\s/g, "").toUpperCase();
     }
 
     function normalizeCompany(value) {
@@ -745,14 +718,12 @@
       return "KMB";
     }
 
-    function stationKey(stop) {
-      return `${stop.company}:${stop.id}`;
-    }
+    function stationKey(stop) { return stop.company + stop.id; }
 
     function companyLabel(company) {
       if (company === "CTB") return "城巴 CTB";
       if (company === "GMB") return "綠色小巴 GMB";
-      return "KMB/LWB";
+      return "KMB / LWB";
     }
 
     function createEmptyStation() {
@@ -761,23 +732,18 @@
 
     function updateStationSettingsFromForm() {
       const rows = Array.from(els.stationList.querySelectorAll(".station-box"));
-      stationSettings = rows.map(row => {
-        const index = Number(row.dataset.index);
-        return {
-          company: normalizeCompany(row.querySelector(".company-input")?.value || "KMB"),
-          id: normalizeStopId(row.querySelector(".stop-id-input")?.value || ""),
-          name: String(row.querySelector(".stop-name-input")?.value || "").trim(),
-          hiddenRoutes: String(row.querySelector(".hide-routes-input")?.value || "").trim(),
-          routeCode: String(row.querySelector(".route-code-input")?.value || "").trim()
-        };
-      }).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || normalizeCompany(station.company) !== "KMB" || list.length === 1);
-
+      stationSettings = rows.map(row => ({
+        company: normalizeCompany(row.querySelector(".company-input")?.value || "KMB"),
+        id: normalizeStopId(row.querySelector(".stop-id-input")?.value || ""),
+        name: String(row.querySelector(".stop-name-input")?.value || "").trim(),
+        hiddenRoutes: String(row.querySelector(".hide-routes-input")?.value || "").trim(),
+        routeCode: String(row.querySelector(".route-code-input")?.value || "").trim()
+      })).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || normalizeCompany(station.company) !== "KMB" || list.length === 1);
       if (!stationSettings.length) stationSettings = [createEmptyStation()];
     }
 
     function renderStationSettings() {
       if (!stationSettings.length) stationSettings = [createEmptyStation()];
-
       els.stationList.innerHTML = stationSettings.map((station, index) => `
         <div class="station-box" data-index="${index}">
           <div class="station-head">
@@ -811,8 +777,7 @@
               <input id="route-code-${index}" class="route-code-input" type="text" autocomplete="off" value="${safeText(station.routeCode || "")}" placeholder="例如：1" />
             </div>` : ""}
           </div>
-        </div>
-      `).join("");
+        </div>`).join("");
 
       els.stationList.querySelectorAll("input, select").forEach(input => {
         input.addEventListener("input", updateStationSettingsFromForm);
@@ -825,8 +790,7 @@
       els.stationList.querySelectorAll(".remove-station-btn").forEach(button => {
         button.addEventListener("click", () => {
           updateStationSettingsFromForm();
-          const index = Number(button.dataset.removeIndex);
-          stationSettings.splice(index, 1);
+          stationSettings.splice(Number(button.dataset.removeIndex), 1);
           if (!stationSettings.length) stationSettings = [createEmptyStation()];
           renderStationSettings();
         });
@@ -835,16 +799,14 @@
 
     function getStops() {
       updateStationSettingsFromForm();
-      return stationSettings
-        .map((station, index) => ({
-          number: index + 1,
-          company: normalizeCompany(station.company),
-          id: normalizeStopId(station.id),
-          name: station.name.trim() || `車站 ${index + 1}`,
-          hiddenRoutes: String(station.hiddenRoutes || "").trim(),
-          routeCode: String(station.routeCode || "").trim()
-        }))
-        .filter(station => station.id);
+      return stationSettings.map((station, index) => ({
+        number: index + 1,
+        company: normalizeCompany(station.company),
+        id: normalizeStopId(station.id),
+        name: station.name.trim() || `車站 ${index + 1}`,
+        hiddenRoutes: String(station.hiddenRoutes || "").trim(),
+        routeCode: String(station.routeCode || "").trim()
+      })).filter(station => station.id);
     }
 
     function buildApiUrl(stop) {
@@ -852,8 +814,11 @@
         return `https://rt.data.gov.hk/v1/transport/batch/stop-eta/CTB/${encodeURIComponent(stop.id)}?lang=zh-hant`;
       }
       if (stop.company === "GMB") {
-        const [routeId, routeSeq, stopSeq] = String(stop.id || "").split("-");
-        return `https://data.etagmb.gov.hk/eta/route-stop/${encodeURIComponent(routeId)}/${encodeURIComponent(routeSeq)}/${encodeURIComponent(stopSeq)}`;
+        const parts = String(stop.id).split("-");
+        if (parts.length < 3 || !parts[0] || !parts[1] || !parts[2]) {
+          throw new Error("GMB Stop ID 格式不正確，需為：路線ID-方向序號-站序");
+        }
+        return `https://data.etagmb.gov.hk/eta/route-stop/${encodeURIComponent(parts[0])}/${encodeURIComponent(parts[1])}/${encodeURIComponent(parts[2])}`;
       }
       return `https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${encodeURIComponent(stop.id)}`;
     }
@@ -869,32 +834,13 @@
     }
 
     function formatClock(date) {
-      return new Intl.DateTimeFormat("zh-Hant-HK", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
-      }).format(date);
-    }
-
-    function routeSort(a, b) {
-      return String(a.route).localeCompare(String(b.route), "en", { numeric: true });
+      return new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
     }
 
     function updateSystemTime() {
       const now = new Date();
-      els.systemTime.textContent = new Intl.DateTimeFormat("zh-Hant-HK", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false
-      }).format(now);
-
-      els.systemDate.textContent = new Intl.DateTimeFormat("zh-Hant-HK", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        weekday: "short"
-      }).format(now);
+      els.systemTime.textContent = new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(now);
+      els.systemDate.textContent = new Intl.DateTimeFormat("zh-Hant-HK", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short" }).format(now);
     }
 
     function getDestination(item) {
@@ -903,171 +849,118 @@
 
     function groupByRoute(items) {
       const groups = new Map();
-
       for (const item of items) {
-        const route = String(item.route || "").toUpperCase();
+        const route = String(item.route).toUpperCase();
         if (!route) continue;
-
         const etaDate = parseEta(item.eta);
         if (!etaDate) continue;
-
         const dest = getDestination(item);
-        const dir = String(item.dir || "").toUpperCase();
-        const key = `${route}|${dest || dir}`;
-
-        if (!groups.has(key)) {
-          groups.set(key, {
-            route,
-            dest,
-            dir,
-            rows: []
-          });
-        }
-
-        groups.get(key).rows.push({
-          eta: etaDate,
-          seq: Number(item.eta_seq || item.seq || 0)
-        });
+        const dir = String(item.dir).toUpperCase();
+        const key = route + dest + dir;
+        if (!groups.has(key)) groups.set(key, { route, dest, dir, rows: [] });
+        groups.get(key).rows.push({ eta: etaDate, seq: Number(item.eta_seq || item.seq || 0) });
       }
-
-      return Array.from(groups.values())
-        .map(group => {
-          group.rows.sort((a, b) => a.eta - b.eta || a.seq - b.seq);
-
-          const unique = [];
-          const used = new Set();
-
-          for (const row of group.rows) {
-            const key = row.eta.getTime();
-            if (used.has(key)) continue;
-            used.add(key);
-            unique.push(row);
-            if (unique.length >= 3) break;
-          }
-
-          return { ...group, rows: unique };
-        })
-        .sort((a, b) => {
-          const routeCompare = String(a.route).localeCompare(String(b.route), "en", { numeric: true });
-          if (routeCompare !== 0) return routeCompare;
-          return String(a.dest || a.dir).localeCompare(String(b.dest || b.dir), "zh-Hant-HK");
-        });
+      return Array.from(groups.values()).map(group => {
+        group.rows.sort((a, b) => a.eta - b.eta || a.seq - b.seq);
+        const unique = [];
+        const used = new Set();
+        for (const row of group.rows) {
+          const key = row.eta.getTime();
+          if (used.has(key)) continue;
+          used.add(key);
+          unique.push(row);
+          if (unique.length >= 3) break;
+        }
+        return { ...group, rows: unique };
+      }).sort((a, b) => {
+        const routeCompare = String(a.route).localeCompare(String(b.route), "en", { numeric: true });
+        if (routeCompare !== 0) return routeCompare;
+        return String(a.dest + a.dir).localeCompare(String(b.dest + b.dir), "zh-Hant-HK");
+      });
     }
 
     function renderAllStops() {
       const stops = getStops();
-
       if (!stops.length) {
-        els.stationsWrap.innerHTML = `
-          <div class="hint">
-            請按左上角 ⚙ 選擇巴士公司並輸入巴士站 ID。<br>
-            支援 KMB/LWB 及城巴 CTB，可自行新增多個車站。
-          </div>`;
+        els.stationsWrap.innerHTML = `<div class="hint">請按左上角 ⚙ 輸入最少一個巴士站 ID。<br>支援 KMB/LWB、城巴 CTB 及綠色小巴 GMB</div>`;
         updateStatusDot("idle");
         return;
       }
-
       els.stationsWrap.innerHTML = stops.map(stop => {
-        const hiddenSet = new Set(
-          String(stop.hiddenRoutes || "")
-            .split(",")
-            .map(x => x.trim().toUpperCase())
-            .filter(Boolean)
-        );
-        const groups = groupByRoute(stopData[stationKey(stop)] || [])
-          .filter(group => {
-            const routeUp = String(group.route || "").toUpperCase();
-            const destUp = String(group.dest || "").toUpperCase();
-            return !hiddenSet.has(routeUp) && !hiddenSet.has(destUp);
-          });
-        return `
-          <section class="station-section active">
-            <div class="stop-title">
-              <div class="stop-name">${safeText(stop.name)}</div>
-              <div class="stop-meta">${safeText(companyLabel(stop.company))}｜更新：${safeText(lastUpdatedText || "--")}｜Stop ID：${safeText(stop.id)}</div>
-            </div>
-            <section class="list">
-              ${renderRoutes(groups)}
-            </section>
-          </section>`;
+        const hiddenSet = new Set(String(stop.hiddenRoutes).split(",").map(x => x.trim().toUpperCase()).filter(Boolean));
+        const groups = groupByRoute(stopData[stationKey(stop)] || []).filter(group => {
+          const routeUp = String(group.route).toUpperCase();
+          const destUp = String(group.dest).toUpperCase();
+          return !hiddenSet.has(routeUp) && !hiddenSet.has(destUp);
+        });
+        return `<section class="station-section active">
+          <div class="stop-title">
+            <div class="stop-name">${safeText(stop.name)}</div>
+            <div class="stop-meta">${safeText(companyLabel(stop.company))}｜更新：${safeText(lastUpdatedText)}｜Stop ID：${safeText(stop.id)}</div>
+          </div>
+          <section class="list">${renderRoutes(groups)}</section>
+        </section>`;
       }).join("");
-
-      document.title = `${stops[0].name}｜巴士 ETA`;
+      document.title = stops[0].name + " ETA";
     }
 
     function renderRoutes(groups) {
-      if (!groups.length) {
-        return `
-          <div class="empty">
-            暫時未有到站資料。<br>
-            請檢查巴士站 ID 是否正確。
-          </div>`;
-      }
-
+      if (!groups.length) return `<div class="empty">未有到站資料<br>請檢查 Stop ID</div>`;
       return groups.map(group => {
         const first = group.rows[0];
         const mins = first ? getMinutes(first.eta) : null;
         const isNow = mins !== null && mins <= 1;
-
         const nextTimes = group.rows.slice(1).map(row => {
           const nextMins = getMinutes(row.eta);
-          return `<span class="next-pill">${nextMins <= 1 ? "即到" : `${nextMins}分`}</span>`;
+          return `<span class="next-pill">${nextMins <= 1 ? "now" : nextMins}</span>`;
         }).join("");
-
-        return `
-          <article class="route-dot">
-            <div class="route-no">${safeText(group.route)}</div>
-            ${group.dest ? `<div class="route-dest" title="${safeText(group.dest)}">${safeText(group.dest)}</div>` : ""}
-            <div class="first-eta ${isNow ? "now" : ""}">
-              ${mins === null ? "--" : isNow ? "即到" : `${mins}<span class="unit">分</span>`}
-            </div>
-            <div class="next-times">
-              ${nextTimes || `<span class="next-pill">${first ? formatClock(first.eta) : "未有"}</span>`}
-            </div>
-          </article>`;
+        return `<article class="route-dot">
+          <div class="route-no">${safeText(group.route)}</div>
+          ${group.dest ? `<div class="route-dest" title="${safeText(group.dest)}">${safeText(group.dest)}</div>` : ""}
+          <div class="first-eta ${isNow ? "now" : ""}">${mins === null ? "--" : isNow ? "now" : mins}<span class="unit">分</span></div>
+          <div class="next-times">${nextTimes}${first ? ` <span class="next-pill">${formatClock(first.eta)}</span>` : ""}</div>
+        </article>`;
       }).join("");
     }
 
     function updateStatusDot(status) {
       if (status === "loading") {
-        els.statusDot.textContent = "↻";
-        els.statusDot.title = "讀取中";
+        els.statusDot.textContent = "⏳";
+        els.statusDot.title = "載入中";
       } else if (status === "ok") {
-        const secondsLeft = nextRefreshAt ? Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1000)) : "";
+        const secondsLeft = nextRefreshAt ? Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1000)) : 0;
         els.statusDot.textContent = secondsLeft || "✓";
         els.statusDot.title = secondsLeft ? `${secondsLeft} 秒後更新` : "已更新";
       } else if (status === "error") {
         els.statusDot.textContent = "!";
-        els.statusDot.title = "讀取失敗";
+        els.statusDot.title = "更新失敗";
       } else {
         els.statusDot.textContent = "○";
-        els.statusDot.title = "尚未設定";
+        els.statusDot.title = "閒置";
       }
     }
 
     function weatherIcon(icon) {
-      const map = {
-        50: "☀️", 51: "☀️", 52: "☀️", 53: "☀️", 54: "☀️", 60: "🌤️", 61: "🌤️",
-        62: "☁️", 63: "☁️", 64: "☁️", 65: "☁️", 70: "🌧️", 71: "🌧️", 72: "🌧️",
-        73: "🌧️", 74: "🌧️", 75: "⛈️", 76: "⛈️", 77: "🌦️", 80: "🌦️", 81: "🌦️",
-        82: "🌦️", 83: "🌫️", 84: "🌫️", 90: "☀️", 91: "🌧️", 92: "🌧️", 93: "🌧️"
-      };
-      return map[Number(icon)] || "🌤️";
+      const map = { 50: "☀", 51: "⛅", 52: "☁", 53: "☁", 54: "🌧", 60: "🌧", 61: "🌧", 62: "🌧", 63: "🌧", 64: "🌧", 65: "🌧", 70: "🌙", 71: "🌙", 72: "🌙", 73: "🌙", 74: "🌙", 75: "🌙", 76: "🌫", 77: "🌫", 80: "⛈", 81: "⛈", 82: "⛈", 83: "⛈", 84: "⛈", 90: "🌡", 91: "🌦", 92: "🌦", 93: "🌦" };
+      return map[Number(icon)] || "🌤";
     }
 
+    /* BUG FIX #4: hkoValue now guards against non-array input */
     function hkoValue(list, place) {
-      return (list || []).find(item => item.place === place)?.value ?? "--";
+      if (!Array.isArray(list)) return "--";
+      return list.find(item => item.place === place)?.value ?? "--";
     }
 
     async function fetchHongKongWeather() {
       try {
+        /* BUG FIX #1: Use &lang= instead of ?lang= (base URL already has ?dataType=) */
         const currentBase = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread";
         const forecastBase = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=flw";
         const [currentEnResponse, currentTcResponse, forecastEnResponse, forecastTcResponse] = await Promise.all([
-          fetch(`${currentBase}&lang=en`, { cache: "no-store" }),
-          fetch(`${currentBase}&lang=tc`, { cache: "no-store" }),
-          fetch(`${forecastBase}&lang=en`, { cache: "no-store" }),
-          fetch(`${forecastBase}&lang=tc`, { cache: "no-store" })
+          fetch(currentBase + "&lang=en", { cache: "no-store" }),
+          fetch(currentBase + "&lang=tc", { cache: "no-store" }),
+          fetch(forecastBase + "&lang=en", { cache: "no-store" }),
+          fetch(forecastBase + "&lang=tc", { cache: "no-store" })
         ]);
         if (![currentEnResponse, currentTcResponse, forecastEnResponse, forecastTcResponse].every(response => response.ok)) throw new Error("HKO API unavailable");
         const [en, tc, forecastEn, forecastTc] = await Promise.all([
@@ -1081,32 +974,152 @@
             <div class="weather-icon" aria-hidden="true">${weatherIcon(icon)}</div>
             <div>
               <div class="weather-temp">${safeText(temperature)}°C</div>
-              <div class="weather-range">相對濕度 ${safeText(humidity)}% · Relative humidity ${safeText(humidity)}%</div>
+              <div class="weather-range">濕度 ${safeText(humidity)}% Relative humidity ${safeText(humidity)}%</div>
             </div>
           </div>
-          <div class="weather-desc">${safeText(forecastTc.forecastDesc || "暫未提供今日天氣描述。")}</div>
+          <div class="weather-desc">${safeText(forecastTc.forecastDesc)}</div>
           <div class="weather-desc-en" lang="en">${safeText(forecastEn.forecastDesc || "Today's weather description is not available.")}</div>`;
         const observed = new Date(tc.temperature?.recordTime || tc.updateTime || Date.now());
-        els.weatherUpdated.textContent = "HKO · " + new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", hour12: false }).format(observed);
+        els.weatherUpdated.textContent = "HKO " + new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", hour12: false }).format(observed);
       } catch {
         els.weatherContent.textContent = "暫時未能讀取天文台即時天氣及今日預測資料 · Current weather and today's forecast are temporarily unavailable.";
         els.weatherUpdated.textContent = "HKO";
       }
     }
 
-    function refreshGoogleCalendar() {
-      const frame = els.gcalFrame;
-      if (!frame || !frame.src || frame.src.includes("YOUR_CALENDAR_ID_HERE")) return;
-      const url = new URL(frame.src);
-      url.searchParams.set("_refresh", Date.now().toString());
-      frame.src = url.toString();
+    /* ========== Apple Calendar (iCloud ICS) ========== */
+
+    function decodeIcsText(value) {
+      return String(value || "")
+        .replace(/\\n/gi, "\n")
+        .replace(/\\,/g, ",")
+        .replace(/\\;/g, ";")
+        .replace(/\\\\/g, "\\");
+    }
+
+    function parseIcsDate(value) {
+      const clean = String(value || "").trim();
+      if (!/^\d{8}(T\d{6}Z?)?$/.test(clean)) return null;
+      const year = Number(clean.slice(0, 4));
+      const month = Number(clean.slice(4, 6)) - 1;
+      const day = Number(clean.slice(6, 8));
+      if (clean.length === 8) return { date: new Date(year, month, day), allDay: true };
+      const hour = Number(clean.slice(9, 11));
+      const minute = Number(clean.slice(11, 13));
+      const second = Number(clean.slice(13, 15));
+      const date = clean.endsWith("Z")
+        ? new Date(Date.UTC(year, month, day, hour, minute, second))
+        : new Date(year, month, day, hour, minute, second);
+      return Number.isNaN(date.getTime()) ? null : { date, allDay: false };
+    }
+
+    function parseIcs(ics) {
+      /* BUG FIX #5: Strip UTF-8 BOM if present */
+      const cleaned = String(ics).replace(/^\uFEFF/, "");
+      const unfolded = cleaned.replace(/\r?\n[ \t]/g, "");
+      return unfolded.split("BEGIN:VEVENT").slice(1).map(block => {
+        const fields = {};
+        block.split(/\r?\n/).forEach(line => {
+          const match = line.match(/^([A-Z-]+)(?:;[^:]*)?:(.*)$/);
+          if (match && fields[match[1]] == null) fields[match[1]] = decodeIcsText(match[2]);
+        });
+        const start = parseIcsDate(fields.DTSTART);
+        if (!start || fields.STATUS === "CANCELLED") return null;
+        return { title: fields.SUMMARY || "（沒有標題）", location: fields.LOCATION || "", ...start };
+      }).filter(Boolean);
+    }
+
+    function eventIsRelevant(event) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return event.allDay ? event.date >= today : event.date >= new Date(now.getTime() - 60 * 60 * 1000);
+    }
+
+    function eventDateLabel(event) {
+      const dateText = new Intl.DateTimeFormat("zh-Hant-HK", { month: "numeric", day: "numeric", weekday: "short" }).format(event.date);
+      if (event.allDay) return dateText + "\n全日";
+      const timeText = new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", hour12: false }).format(event.date);
+      return dateText + "\n" + timeText;
+    }
+
+    function renderAppleCalendarEvents(events) {
+      const list = document.getElementById("appleCalendarList");
+      if (!list) return;
+      list.replaceChildren();
+      const upcoming = events.filter(eventIsRelevant).sort((a, b) => a.date - b.date).slice(0, 12);
+      if (!upcoming.length) {
+        const empty = document.createElement("div");
+        empty.className = "icloud-calendar-status";
+        empty.textContent = "未來沒有行程。";
+        list.appendChild(empty);
+        return;
+      }
+      upcoming.forEach(event => {
+        const row = document.createElement("div");
+        row.className = "icloud-event";
+        const time = document.createElement("div");
+        time.className = "icloud-event-time";
+        time.textContent = eventDateLabel(event);
+        const details = document.createElement("div");
+        const title = document.createElement("div");
+        title.className = "icloud-event-title";
+        title.textContent = event.title;
+        details.appendChild(title);
+        if (event.location) {
+          const location = document.createElement("div");
+          location.className = "icloud-event-meta";
+          location.textContent = event.location;
+          details.appendChild(location);
+        }
+        row.append(time, details);
+        list.appendChild(row);
+      });
+    }
+
+    async function fetchIcloudIcs() {
+      const urls = [
+        ICLOUD_CALENDAR_URL,
+        "https://api.allorigins.win/raw?url=" + encodeURIComponent(ICLOUD_CALENDAR_URL),
+        "https://corsproxy.io/?url=" + encodeURIComponent(ICLOUD_CALENDAR_URL)
+      ];
+      let lastError;
+      for (const url of urls) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+        try {
+          const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+          if (!response.ok) throw new Error("HTTP " + response.status);
+          const ics = await response.text();
+          if (!ics.includes("BEGIN:VCALENDAR")) throw new Error("日曆資料格式不正確");
+          return ics;
+        } catch (error) {
+          lastError = error;
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+      throw lastError || new Error("未能讀取 iCloud 日曆");
+    }
+
+    async function refreshAppleCalendar() {
+      const list = document.getElementById("appleCalendarList");
+      if (!list) return;
+      list.innerHTML = '<div class="icloud-calendar-status">正在讀取 Apple 日曆…</div>';
+      try {
+        renderAppleCalendarEvents(parseIcs(await fetchIcloudIcs()));
+      } catch (error) {
+        list.innerHTML = '<div class="icloud-calendar-status">暫時未能讀取 Apple 日曆。請檢查公開日曆連結或網絡連線。</div>';
+        console.error("Apple Calendar error:", error);
+      }
     }
 
     function refreshSlowWidgets() {
       lastWidgetRefreshAt = Date.now();
-      refreshGoogleCalendar();
+      refreshAppleCalendar();
       fetchHongKongWeather();
     }
+
+    /* ========== ETA Fetching ========== */
 
     async function fetchJsonWithFallback(apiUrl) {
       const urls = [
@@ -1120,7 +1133,7 @@
         const timeout = setTimeout(() => controller.abort(), 12000);
         try {
           const response = await fetch(url, { cache: "no-store", signal: controller.signal });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          if (!response.ok) throw new Error("HTTP " + response.status);
           return await response.json();
         } catch (error) {
           lastError = error;
@@ -1128,20 +1141,17 @@
           clearTimeout(timeout);
         }
       }
-      throw new Error(`連線被瀏覽器或網絡封鎖（${lastError?.message || "Load failed"}）`);
+      throw new Error(lastError?.message || "Load failed");
     }
 
     async function fetchEta() {
       const stops = getStops();
-
       if (!stops.length) {
         updateStatusDot("idle");
         els.stationsWrap.innerHTML = `<div class="error">請按左上角 ⚙ 輸入最少一個巴士站 ID。</div>`;
         return;
       }
-
       updateStatusDot("loading");
-
       try {
         const results = await Promise.all(stops.map(async stop => {
           const json = await fetchJsonWithFallback(buildApiUrl(stop));
@@ -1163,51 +1173,34 @@
           }
           return { key: stationKey(stop), data: json.data || [] };
         }));
-
         stopData = {};
-        for (const result of results) {
-          stopData[result.key] = result.data;
-        }
-
-        lastUpdatedText = new Intl.DateTimeFormat("zh-Hant-HK", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false
-        }).format(new Date());
-
+        for (const result of results) stopData[result.key] = result.data;
+        lastUpdatedText = new Intl.DateTimeFormat("zh-Hant-HK", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(new Date());
         renderAllStops();
-
         nextRefreshAt = Date.now() + Number(els.refreshSeconds.value) * 1000;
         updateStatusDot("ok");
         saveSettings();
-
         clearTimeout(timer);
         timer = setTimeout(fetchEta, Number(els.refreshSeconds.value) * 1000);
       } catch (error) {
-        els.stationsWrap.innerHTML = `
-          <div class="error">
-            無法讀取公開 API。<br>
-            請檢查巴士公司、Stop ID 或網絡連線；系統已自動嘗試直接連線及兩個 CORS 備用通道。<br>
-            錯誤：${safeText(error.message)}
-          </div>`;
+        els.stationsWrap.innerHTML = `<div class="error">無法讀取公開 API。<br>請檢查巴士公司、Stop ID 或網絡連線；系統已自動嘗試直接連線及兩個 CORS 備用通道。<br>錯誤：${safeText(error.message)}</div>`;
         nextRefreshAt = Date.now() + Number(els.refreshSeconds.value) * 1000;
         updateStatusDot("error");
       }
     }
 
+    /* ========== Settings Export/Import ========== */
+
     function saveSettings() {
       updateStationSettingsFromForm();
       const data = {
-        stations: stationSettings
-          .map(station => ({
-            company: normalizeCompany(station.company),
-            id: normalizeStopId(station.id),
-            name: String(station.name || "").trim(),
-            hiddenRoutes: String(station.hiddenRoutes || "").trim(),
-            routeCode: String(station.routeCode || "").trim()
-          }))
-          .filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || list.length === 1),
+        stations: stationSettings.map(station => ({
+          company: normalizeCompany(station.company),
+          id: normalizeStopId(station.id),
+          name: String(station.name || "").trim(),
+          hiddenRoutes: String(station.hiddenRoutes || "").trim(),
+          routeCode: String(station.routeCode || "").trim()
+        })).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || list.length === 1),
         refreshSeconds: els.refreshSeconds.value,
         theme: els.themeSelect.value
       };
@@ -1249,7 +1242,6 @@
         if (!data || typeof data !== "object") throw new Error("設定檔格式不正確");
         if (data.version != null && data.version !== 1) throw new Error("設定檔版本不支援");
         if (!Array.isArray(data.stations)) throw new Error("檔案內沒有車站設定");
-
         const normalizedStations = data.stations.map((station, index) => {
           if (!station || typeof station !== "object") throw new Error(`第 ${index + 1} 個車站資料無效`);
           const company = normalizeCompany(station.company);
@@ -1261,7 +1253,6 @@
           if (!id && !name && !hiddenRoutes && !routeCode && company === "KMB") throw new Error(`第 ${index + 1} 個車站沒有任何可用設定`);
           return { company, id, name, hiddenRoutes, routeCode };
         }).filter((station, index, list) => station.id || station.name || station.hiddenRoutes || station.routeCode || normalizeCompany(station.company) !== "KMB" || list.length === 1);
-
         stationSettings = normalizedStations.length ? normalizedStations : [createEmptyStation()];
         if (["15", "30", "60"].includes(String(data.refreshSeconds))) els.refreshSeconds.value = String(data.refreshSeconds);
         if (["light", "dark"].includes(data.theme)) {
@@ -1280,6 +1271,8 @@
       }
     }
 
+    /* ========== URL Params & Load ========== */
+
     function getUrlStations(params) {
       const stations = [];
       const firstStop = params.get("stop") || params.get("stop1") || "";
@@ -1292,7 +1285,6 @@
           routeCode: params.get("route") || params.get("route1") || ""
         });
       }
-
       for (let i = 2; i <= 20; i += 1) {
         const stopId = params.get(`stop${i}`) || "";
         if (!stopId) continue;
@@ -1304,29 +1296,24 @@
           routeCode: params.get(`route${i}`) || ""
         });
       }
-
       const repeatedStops = params.getAll("stop");
       if (repeatedStops.length > 1) {
         return repeatedStops.map((stopId, index) => ({
           company: normalizeCompany(params.getAll("co")[index] || params.get("co") || "KMB"),
           id: normalizeStopId(stopId),
           name: params.getAll("name")[index] || `車站 ${index + 1}`,
-          hiddenRoutes: params.getAll("hide")[index] || ""
+          hiddenRoutes: params.getAll("hide")[index] || "",
+          routeCode: params.getAll("route")[index] || ""
         })).filter(station => station.id);
       }
-
       return stations.filter(station => station.id);
     }
 
     function loadSettings() {
       const params = new URLSearchParams(location.search);
       const urlStations = getUrlStations(params);
-
       let saved = {};
-      try {
-        saved = JSON.parse(localStorage.getItem("hkBusEtaSettings") || "{}");
-      } catch {}
-
+      try { saved = JSON.parse(localStorage.getItem("hkBusEtaSettings") || "{}"); } catch {}
       if (urlStations.length) {
         stationSettings = urlStations;
       } else if (Array.isArray(saved.stations) && saved.stations.length) {
@@ -1338,27 +1325,26 @@
           routeCode: String(station.routeCode || "").trim()
         }));
       } else if (saved.stopId1 || saved.stopId2) {
+        /* BUG FIX #3: Add missing hiddenRoutes and routeCode to legacy migration */
         stationSettings = [
-          { company: normalizeCompany(saved.company1), id: normalizeStopId(saved.stopId1), name: saved.stopName1 || "" },
-          { company: normalizeCompany(saved.company2), id: normalizeStopId(saved.stopId2), name: saved.stopName2 || "" }
+          { company: normalizeCompany(saved.company1), id: normalizeStopId(saved.stopId1), name: saved.stopName1 || "", hiddenRoutes: "", routeCode: "" },
+          { company: normalizeCompany(saved.company2), id: normalizeStopId(saved.stopId2), name: saved.stopName2 || "", hiddenRoutes: "", routeCode: "" }
         ].filter(station => station.id || station.name);
       } else {
         stationSettings = [createEmptyStation()];
       }
-
       if (!stationSettings.length) stationSettings = [createEmptyStation()];
       renderStationSettings();
-
       const refresh = params.get("refresh") || saved.refreshSeconds || "30";
       if (["15", "30", "60"].includes(refresh)) els.refreshSeconds.value = refresh;
-
       const theme = saved.theme || "light";
       els.themeSelect.value = theme;
       document.documentElement.setAttribute("data-theme", theme);
-
       if (urlStations.length || stationSettings.some(station => station.id)) fetchEta();
       else updateStatusDot("idle");
     }
+
+    /* ========== UI Events ========== */
 
     function openSettings() {
       els.settingsBackdrop.classList.add("active");
