@@ -47,7 +47,9 @@
     .weather-error { color:var(--muted); font-size:13px; font-weight:750; }
     .calendar-panel { margin-top:0; padding:14px; border-radius:22px; background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow); backdrop-filter:blur(16px); }
     .calendar-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; padding:0 2px; }
-    .calendar-title { font-size:16px; font-weight:950; color:var(--text); } .calendar-subtitle { font-size:11px; font-weight:800; color:var(--muted); }
+    .calendar-title { font-size:16px; font-weight:950; color:var(--text); }
+    .calendar-subtitle { font-size:11px; font-weight:800; color:var(--muted); }
+    .calendar-updated { font-size:11px; font-weight:750; color:var(--muted); }
     .gcal-frame-wrap { position:relative; width:100%; border-radius:16px; overflow:hidden; background:var(--card-solid); }
     .icloud-calendar-list { min-height:160px; max-height:560px; overflow-y:auto; }
     .icloud-calendar-status { padding:18px 10px; color:var(--muted); font-size:13px; font-weight:750; text-align:center; line-height:1.5; }
@@ -102,7 +104,10 @@
           <div id="weatherContent" class="weather-error">正在讀取香港天文台資料…</div>
         </section>
         <section class="calendar-panel">
-          <div class="calendar-head"><div class="calendar-title">今日行程</div><div class="calendar-subtitle">Apple 日曆</div></div>
+          <div class="calendar-head">
+            <div class="calendar-title">今日行程</div>
+            <div><span class="calendar-subtitle">Apple 日曆</span> <span class="calendar-updated" id="calendarUpdated"></span></div>
+          </div>
           <div class="gcal-frame-wrap"><div id="appleCalendarList" class="icloud-calendar-list"><div class="icloud-calendar-status">正在讀取 Apple 日曆…</div></div></div>
         </section>
       </aside>
@@ -139,10 +144,11 @@
       systemTime:document.getElementById("systemTime"), systemDate:document.getElementById("systemDate"),
       statusDot:document.getElementById("statusDot"), forceRefreshBtn:document.getElementById("forceRefreshBtn"),
       weatherContent:document.getElementById("weatherContent"), weatherUpdated:document.getElementById("weatherUpdated"),
-      stationsWrap:document.getElementById("stationsWrap")
+      calendarUpdated:document.getElementById("calendarUpdated"), stationsWrap:document.getElementById("stationsWrap")
     };
     let timer=null, nextRefreshAt=0, lastWidgetRefreshAt=0;
     const WIDGET_REFRESH_MS=10*60*1000;
+    const CALENDAR_CACHE_MS=10*60*1000;
     let lastUpdatedText="", stopData={};
     let stationSettings=[{company:"KMB",id:"",name:"",hiddenRoutes:"",routeCode:""}];
     const ICLOUD_CALENDAR_URL="https://p403-calendars.icloud.com/published/2/MTkzNDE2OTY4MTE5MzQxNlzQGcyICSJVw2Ja5NxAq_AmN_Dfc9Q3KC9ptgy8EYEncaFPqwa6tWJ1JP8qLLpidQfykMSqTUvIWarN9Vyf8z8";
@@ -172,13 +178,15 @@
     function parseIcsDate(v){const c=String(v||"").trim();if(!/^\d{8}(T\d{6}Z?)?$/.test(c))return null;const y=Number(c.slice(0,4)),m=Number(c.slice(4,6))-1,d=Number(c.slice(6,8));if(c.length===8)return{date:new Date(y,m,d),allDay:true};const h=Number(c.slice(9,11)),mi=Number(c.slice(11,13)),s=Number(c.slice(13,15));const date=c.endsWith("Z")?new Date(Date.UTC(y,m,d,h,mi,s)):new Date(y,m,d,h,mi,s);return isNaN(date.getTime())?null:{date,allDay:false};}
     function parseIcs(ics){const cleaned=String(ics).replace(/^\uFEFF/,"");const unfolded=cleaned.replace(/\r?\n[ \t]/g,"");return unfolded.split("BEGIN:VEVENT").slice(1).map(block=>{const fields={};block.split(/\r?\n/).forEach(line=>{const match=line.match(/^([A-Z-]+)(?:;[^:]*)?:(.*)$/);if(match&&fields[match[1]]==null)fields[match[1]]=decodeIcsText(match[2]);});const start=parseIcsDate(fields.DTSTART);if(!start||fields.STATUS==="CANCELLED")return null;return{title:fields.SUMMARY||"（沒有標題）",location:fields.LOCATION||"",...start};}).filter(Boolean);}
     function eventIsRelevant(event){const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());return event.allDay?event.date>=today:event.date>=new Date(now.getTime()-60*60*1000);}
-    /* === ONLY CHANGE: Calendar dates in English + 12-hour format === */
     function eventDateLabel(event){const dateText=new Intl.DateTimeFormat("en-GB",{month:"short",day:"2-digit",weekday:"short"}).format(event.date);if(event.allDay)return dateText+"\nAll day";const timeText=new Intl.DateTimeFormat("en-GB",{hour:"2-digit",minute:"2-digit",hour12:true}).format(event.date);return dateText+"\n"+timeText;}
-    /* === END CHANGE === */
     function renderAppleCalendarEvents(events){const list=document.getElementById("appleCalendarList");if(!list)return;list.replaceChildren();const upcoming=events.filter(eventIsRelevant).sort((a,b)=>a.date-b.date).slice(0,12);if(!upcoming.length){const empty=document.createElement("div");empty.className="icloud-calendar-status";empty.textContent="未來沒有行程。";list.appendChild(empty);return;}upcoming.forEach(event=>{const row=document.createElement("div");row.className="icloud-event";const time=document.createElement("div");time.className="icloud-event-time";time.textContent=eventDateLabel(event);const details=document.createElement("div");const title=document.createElement("div");title.className="icloud-event-title";title.textContent=event.title;details.appendChild(title);if(event.location){const loc=document.createElement("div");loc.className="icloud-event-meta";loc.textContent=event.location;details.appendChild(loc);}row.append(time,details);list.appendChild(row);});}
+    /* ========== Calendar cache: instant display + background refresh ========== */
+    function saveCalendarCache(events,timestamp){try{localStorage.setItem("appleCalendarCache",JSON.stringify({events,timestamp}));}catch{}}
+    function loadCalendarCache(){try{const raw=localStorage.getItem("appleCalendarCache");if(!raw)return null;const data=JSON.parse(raw);if(!data||!Array.isArray(data.events)||!data.timestamp)return null;return data;}catch{return null;}}
+    function updateCalendarLabel(timestamp){if(!els.calendarUpdated)return;if(!timestamp){els.calendarUpdated.textContent="";return;}const d=new Date(timestamp);if(isNaN(d.getTime())){els.calendarUpdated.textContent="";return;}const label=new Intl.DateTimeFormat("zh-Hant-HK",{hour:"2-digit",minute:"2-digit",hour12:false}).format(d);els.calendarUpdated.textContent="· 更新 "+label;}
     async function fetchIcloudIcs(){const urls=["https://api.allorigins.win/raw?url="+encodeURIComponent(ICLOUD_CALENDAR_URL),"https://corsproxy.io/?url="+encodeURIComponent(ICLOUD_CALENDAR_URL),"https://api.codetabs.com/v1/proxy/?quest="+encodeURIComponent(ICLOUD_CALENDAR_URL)];let lastError;for(const url of urls){const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),15000);try{const response=await fetch(url,{cache:"no-store",signal:controller.signal});if(!response.ok)throw new Error("HTTP "+response.status);const ics=await response.text();if(!ics.includes("BEGIN:VCALENDAR")&&!ics.includes("BEGIN:VEVENT"))throw new Error("日曆資料格式不正確");return ics;}catch(error){lastError=error;}finally{clearTimeout(timeout);}}throw lastError||new Error("未能讀取 iCloud 日曆");}
-    async function refreshAppleCalendar(){const list=document.getElementById("appleCalendarList");if(!list)return;list.innerHTML='<div class="icloud-calendar-status">正在讀取 Apple 日曆…</div>';try{renderAppleCalendarEvents(parseIcs(await fetchIcloudIcs()));}catch(error){list.innerHTML='<div class="icloud-calendar-status">暫時未能讀取 Apple 日曆。請檢查公開日曆連結或網絡連線。</div>';console.error("Apple Calendar error:",error);}}
-    function refreshSlowWidgets(){lastWidgetRefreshAt=Date.now();refreshAppleCalendar();fetchHongKongWeather();}
+    async function refreshAppleCalendar(force){const list=document.getElementById("appleCalendarList");if(!list)return;const cache=loadCalendarCache();const now=Date.now();const cacheFresh=cache&&(now-cache.timestamp)<CALENDAR_CACHE_MS;if(cacheFresh){renderAppleCalendarEvents(cache.events);updateCalendarLabel(cache.timestamp);}else if(cache){renderAppleCalendarEvents(cache.events);updateCalendarLabel(cache.timestamp);}if(cacheFresh&&!force)return;if(!cache)list.innerHTML='<div class="icloud-calendar-status">正在讀取 Apple 日曆…</div>';try{const ics=await fetchIcloudIcs();const events=parseIcs(ics);saveCalendarCache(events,now);renderAppleCalendarEvents(events);updateCalendarLabel(now);}catch(error){if(!cache)list.innerHTML='<div class="icloud-calendar-status">暫時未能讀取 Apple 日曆。請檢查公開日曆連結或網絡連線。</div>';console.error("Apple Calendar error:",error);}}
+    function refreshSlowWidgets(){lastWidgetRefreshAt=Date.now();refreshAppleCalendar(false);fetchHongKongWeather();}
     async function fetchJsonWithFallback(apiUrl){const urls=[apiUrl,"https://api.allorigins.win/raw?url="+encodeURIComponent(apiUrl),"https://corsproxy.io/?url="+encodeURIComponent(apiUrl)];let lastError;for(const url of urls){const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);try{const response=await fetch(url,{cache:"no-store",signal:controller.signal});if(!response.ok)throw new Error("HTTP "+response.status);return await response.json();}catch(error){lastError=error;}finally{clearTimeout(timeout);}}throw new Error(lastError?.message||"Load failed");}
     async function fetchEta(){const stops=getStops();if(!stops.length){updateStatusDot("idle");els.stationsWrap.innerHTML=`<div class="error">請按左上角 ⚙ 輸入最少一個巴士站 ID。</div>`;return;}updateStatusDot("loading");try{const results=await Promise.all(stops.map(async stop=>{const json=await fetchJsonWithFallback(buildApiUrl(stop));if(stop.company==="GMB"){const etaList=json.data?.eta||[];const routeLabel=stop.routeCode||"小巴";const rows=etaList.filter(item=>item.timestamp).map((item,index)=>({route:routeLabel,dest_tc:stop.name||"",dest_en:stop.name||"",eta:item.timestamp,eta_seq:item.eta_seq??index+1,rmk_tc:item.remarks_tc||"",rmk_en:item.remarks_en||""}));return{key:stationKey(stop),data:rows};}return{key:stationKey(stop),data:json.data||[]};}));stopData={};for(const result of results)stopData[result.key]=result.data;lastUpdatedText=new Intl.DateTimeFormat("zh-Hant-HK",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(new Date());renderAllStops();nextRefreshAt=Date.now()+Number(els.refreshSeconds.value)*1000;updateStatusDot("ok");saveSettings();clearTimeout(timer);timer=setTimeout(fetchEta,Number(els.refreshSeconds.value)*1000);}catch(error){els.stationsWrap.innerHTML=`<div class="error">無法讀取公開 API。<br>請檢查巴士公司、Stop ID 或網絡連線；系統已自動嘗試直接連線及兩個 CORS 備用通道。<br>錯誤：${safeText(error.message)}</div>`;nextRefreshAt=Date.now()+Number(els.refreshSeconds.value)*1000;updateStatusDot("error");}}
     function saveSettings(){updateStationSettingsFromForm();const data={stations:stationSettings.map(s=>({company:normalizeCompany(s.company),id:normalizeStopId(s.id),name:String(s.name||"").trim(),hiddenRoutes:String(s.hiddenRoutes||"").trim(),routeCode:String(s.routeCode||"").trim()})).filter((s,i,l)=>s.id||s.name||s.hiddenRoutes||s.routeCode||l.length===1),refreshSeconds:els.refreshSeconds.value,theme:els.themeSelect.value};localStorage.setItem("hkBusEtaSettings",JSON.stringify(data));}
@@ -192,7 +200,7 @@
     els.openSettingsBtn.addEventListener("click",openSettings);
     els.closeSettingsBtn.addEventListener("click",closeSettings);
     els.cancelSettingsBtn.addEventListener("click",closeSettings);
-    els.forceRefreshBtn.addEventListener("click",()=>{if(els.forceRefreshBtn.classList.contains("spinning"))return;els.forceRefreshBtn.classList.add("spinning");clearTimeout(timer);refreshSlowWidgets();fetchEta();setTimeout(()=>els.forceRefreshBtn.classList.remove("spinning"),500);});
+    els.forceRefreshBtn.addEventListener("click",()=>{if(els.forceRefreshBtn.classList.contains("spinning"))return;els.forceRefreshBtn.classList.add("spinning");clearTimeout(timer);refreshSlowWidgets();refreshAppleCalendar(true);fetchEta();setTimeout(()=>els.forceRefreshBtn.classList.remove("spinning"),500);});
     els.addStationBtn.addEventListener("click",()=>{updateStationSettingsFromForm();stationSettings.push(createEmptyStation());renderStationSettings();setTimeout(()=>{const inputs=els.stationList.querySelectorAll(".stop-id-input");inputs[inputs.length-1]?.focus();},50);});
     els.settingsBackdrop.addEventListener("click",event=>{if(event.target===els.settingsBackdrop)closeSettings();});
     document.addEventListener("keydown",event=>{if(event.key==="Escape")closeSettings();});
